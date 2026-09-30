@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ff6b81">
+<title>おたんじょうびカード</title>
+<style>
+:root{--bg:#fff8f3;--fg:#3b2f2f;--sub:#8a7a76;--card:#fff;--line:#f0dfd6;--acc:#ff6b81;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1e1819;--fg:#f6ebe7;--sub:#b3a09b;--card:#2a2223;--line:#3d3133}}
+:root[data-theme="dark"]{--bg:#1e1819;--fg:#f6ebe7;--sub:#b3a09b;--card:#2a2223;--line:#3d3133}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 "Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:20px 0 4px}
+.note{color:var(--sub);font-size:14px;margin:4px 0}
+.box,.row2{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:12px 0}
+.row2{display:flex;align-items:center;gap:8px;margin:8px 0}
+.g{flex:1;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+#ban{background:linear-gradient(90deg,var(--acc),#ffb35c);color:#fff;border-radius:14px;padding:12px 16px;font-weight:700;margin:12px 0}
+.btn{background:var(--acc);color:#fff;border:0;border-radius:999px;padding:.6em 1.1em;font:inherit;font-weight:700;cursor:pointer}
+.btn.s{padding:.35em .9em;font-size:14px}
+.btn:disabled{opacity:.5}
+.x2{background:none;border:0;color:var(--sub);cursor:pointer;font-size:16px}
+select,textarea,input:not([type=checkbox]){border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit;background:var(--bg);color:var(--fg)}
+textarea{width:100%;min-height:96px;resize:vertical}
+input[readonly]{flex:1;min-width:0}
+.sw{width:32px;height:32px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0}
+.eb{font-size:22px;background:none;border:2px solid transparent;border-radius:10px;cursor:pointer;padding:2px 6px}
+.sw.on,.eb.on{outline:3px solid var(--acc)}
+.qrb{text-align:center}.qrb canvas{background:#fff}
+dialog{border:0;border-radius:18px;padding:16px;background:var(--card);color:var(--fg);width:min(92vw,520px);max-height:88vh}
+dialog::backdrop{background:#0008}
+.dh{display:flex;justify-content:space-between;align-items:center;font-size:18px}
+.dh button{background:none;border:0;font-size:20px;color:var(--fg);cursor:pointer}
+.mc{position:relative;color:#3b2f2f;border-radius:14px;padding:14px 34px 12px 14px;margin:10px 0;white-space:pre-wrap;word-break:break-word}
+.mc .fr{font-size:13px;opacity:.7;margin-top:6px;text-align:right}
+.mc .x2{position:absolute;top:4px;right:6px;color:inherit;opacity:.6}
+details{margin-top:8px;font-size:14px;color:var(--sub)}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+</head>
+<body>
+<main>
+<h1>🎂 おたんじょうびカード</h1>
+<p id="toast" class="note"></p>
+<div id="app"></div>
+</main>
+<dialog id="dlg">
+<div class="dh"><b id="dt"></b><button id="dx" aria-label="閉じる">✕</button></div>
+<div id="db"></div>
+</dialog>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import {getDatabase,ref,get,set,push,remove,onValue,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+
+const app=initializeApp({
+  apiKey:"AIzaSyCJ2QkzoZDozn1c6WmNet_IFFgzto4PyDc",
+  authDomain:"happybithday-card.firebaseapp.com",
+  databaseURL:"https://happybithday-card-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"happybithday-card",
+  storageBucket:"happybithday-card.firebasestorage.app",
+  messagingSenderId:"401578322744",
+  appId:"1:401578322744:web:66971bf93b4db56ae7afcd"
+});
+const auth=getAuth(app),db=getDatabase(app);
+
+const $=s=>document.querySelector(s);
+const h=(t,a={},...c)=>{const e=document.createElement(t);for(const k in a){if(k==='class')e.className=a[k];else if(k.startsWith('on'))e[k]=a[k];else e.setAttribute(k,a[k])}c.flat().forEach(x=>{if(x!=null&&x!==false)e.append(x)});return e};
+const COL=['#ffe3e8','#fff3c4','#dcf5e4','#e0ecff'],EM=['🎂','🎉','🎈','💐','🌟','🎁'];
+const base=location.href.split(/[?#]/)[0];
+const msg=t=>{$('#toast').textContent=t||''};
+const nxt=p=>{const n=new Date(),t=new Date(n.getFullYear(),n.getMonth(),n.getDate());let d=new Date(t.getFullYear(),p.m-1,p.d);if(d<t)d=new Date(t.getFullYear()+1,p.m-1,p.d);return{dd:Math.round((d-t)/864e5),y:d.getFullYear()}};
+const sel=n=>h('select',{},Array.from({length:n},(_,i)=>h('option',{value:i+1},i+1)));
+const btn=(l,f,c='btn s')=>h('button',{class:c,onclick:f},l);
+const okP=p=>p&&p.m>=1&&p.m<=12&&p.d>=1&&p.d<=31;
+
+let me=null,prof=null,friends=[],priv=[],wall=[],subs=[],un=null;
+try{const q=new URLSearchParams(location.search).get('add');if(q)sessionStorage.setItem('add',q)}catch(e){}
+
+function show(t,...c){$('#dt').textContent=t;$('#db').replaceChildren(...c.flat());if(!$('#dlg').open)$('#dlg').showModal()}
+$('#dx').onclick=()=>$('#dlg').close();
+$('#dlg').addEventListener('close',()=>{if(un){un();un=null}});
+
+function qr(text,px){
+  try{const q=qrcode(0,'L');q.addData(text);q.make();const n=q.getModuleCount(),s=Math.max(2,Math.floor(px/(n+8))),m=4*s,c=h('canvas');
+  c.width=c.height=n*s+2*m;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.fillStyle='#000';
+  for(let r=0;r<n;r++)for(let k=0;k<n;k++)if(q.isDark(r,k))g.fillRect(m+k*s,m+r*s,s,s);
+  c.style.cssText='width:100%;max-width:'+px+'px;image-rendering:pixelated;border-radius:8px';return c}
+  catch(e){return h('p',{class:'note'},'QRを作れませんでした。下のリンクを送ってください。')}
+}
+function copyBox(v){const i=h('input',{readonly:'',value:v});return h('div',{class:'row'},i,btn('コピー',()=>{i.select();try{navigator.clipboard.writeText(v)}catch(e){}}))}
+
+// ---- データ読み込み ----
+const list=(s,k,to)=>Object.entries(s.val()||{}).map(([id,c])=>({...c,id,k,to}));
+function start(){
+  const uid=me.uid,on=(path,fn)=>subs.push(onValue(ref(db,path),fn,e=>msg('読み込みエラー：'+e.code)));
+  on('friends/'+uid,async s=>{
+    friends=(await Promise.all(Object.keys(s.val()||{}).map(async id=>{try{const p=await get(ref(db,'profiles/'+id));return p.exists()?{...p.val(),id}:null}catch(e){return null}}))).filter(okP);
+    render();
+  });
+  on('private/'+uid,s=>{priv=list(s,'p',uid);render()});
+  on('wall/'+uid,s=>{wall=list(s,'w',uid);render()});
+  pend();
+}
+async function pend(){
+  let a=null;try{a=sessionStorage.getItem('add');sessionStorage.removeItem('add')}catch(e){}
+  if(!a)return;history.replaceState(null,'',base);
+  if(a!==me.uid)addF(a);
+}
+async function addF(id){
+  try{
+    await set(ref(db,`friends/${me.uid}/${id}`),true);
+    await set(ref(db,`friends/${id}/${me.uid}`),true);
+    const p=await get(ref(db,'profiles/'+id));if(!p.exists())throw 0;
+    msg('🎉 '+p.val().nm+'さんと友だちになりました！');
+  }catch(e){
+    try{await remove(ref(db,`friends/${me.uid}/${id}`));await remove(ref(db,`friends/${id}/${me.uid}`))}catch(_){}
+    msg('友だち追加に失敗しました。QRが正しいか、相手が登録済みか確認してね。');
+  }
+}
+
+// ---- 画面 ----
+function loginBox(){
+  return h('div',{class:'box'},h('p',{},'Googleアカウントでログインして、友だちと誕生日カードを送り合おう。'),
+    btn('Googleでログイン',async()=>{
+      const p=new GoogleAuthProvider();
+      try{await signInWithPopup(auth,p)}
+      catch(e){
+        if(['auth/popup-blocked','auth/operation-not-supported-in-this-environment'].includes(e.code))signInWithRedirect(auth,p);
+        else if(!['auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(e.code))msg('ログインできませんでした（'+(e.code||'')+'）');
+      }
+    },'btn'));
+}
+function profForm(edit){
+  const nm=h('input',{placeholder:'ニックネーム',maxlength:20,value:edit?prof.nm:(me.displayName||'').slice(0,20)}),bm=sel(12),bd=sel(31);
+  if(edit){bm.value=prof.m;bd.value=prof.d}
+  return h('div',{class:'box'},h('b',{},edit?'✏ プロフィール編集':'👋 はじめに、自分のプロフィールを登録'),h('div',{class:'row'},nm),h('div',{class:'row'},bm,'月',bd,'日'),
+    btn('保存',async()=>{
+      const m=+bm.value,d=+bd.value;
+      if(new Date(2024,m-1,d).getMonth()!==m-1){msg('その日付は存在しません。');return}
+      const p={nm:nm.value.trim().slice(0,20)||'わたし',m,d},first=!prof;
+      try{await set(ref(db,'profiles/'+me.uid),p);prof=p;msg('');if($('#dlg').open)$('#dlg').close();if(first)start();render()}
+      catch(e){msg('保存できませんでした（'+(e.code||'')+'）。Firebaseのルール設定を確認してね。')}
+    },'btn'));
+}
+function invite(){
+  const u=base+'?add='+me.uid;
+  show('📤 友だち招待QR',h('div',{class:'qrb'},qr(u,300)),h('p',{class:'note'},'友だちがスマホのカメラで読み取ると、アプリが開いてすぐ友だちになれます。'),copyBox(u),
+    navigator.share&&btn('LINEなどで送る',()=>navigator.share({title:'おたんじょうびカード',text:'友だちになろう！',url:u}).catch(()=>{}),'btn'));
+}
+function cardEl(c,rec){
+  const me1=nxt(prof),lock=rec&&c.y===me1.y&&me1.dd>0,nmF=String(c.fromNm||'').slice(0,20);
+  const del=(rec||c.from===me.uid)&&h('button',{class:'x2','aria-label':'削除',onclick:()=>remove(ref(db,(c.k==='p'?'private/':'wall/')+c.to+'/'+c.id)).catch(()=>msg('削除できませんでした。'))},'🗑');
+  return lock
+    ?h('div',{class:'mc',style:'background:var(--line);color:var(--fg)'},'🎁 '+nmF+'さんからのカード（誕生日まで開けません）',del)
+    :h('div',{class:'mc',style:'background:'+(COL[c.ci]||COL[0])},(EM.includes(c.em)?c.em:'🎂')+' '+String(c.t||'').slice(0,300),h('div',{class:'fr'},(c.k==='p'?'🔒 ':'')+'— '+nmF),del);
+}
+function inbox(){
+  const all=[...priv,...wall].sort((a,b)=>(b.ts||0)-(a.ts||0));
+  show('💌 届いたカード',all.length?all.map(c=>cardEl(c,true)):h('p',{class:'note'},'まだ届いていません。'));
+}
+function compose(f){
+  let ci=0,em=0;
+  const ta=h('textarea',{maxlength:300,placeholder:'お誕生日おめでとう！のメッセージ'}),pri=h('input',{type:'checkbox'}),wl=h('div'),out=h('p',{class:'note'});
+  const pick=(arr,isCol)=>{const w=h('div',{class:'row'});arr.forEach((x,i)=>w.append(h('button',{class:(isCol?'sw':'eb')+(i?'':' on'),style:isCol?'background:'+x:'','aria-label':'選ぶ',onclick:e=>{if(isCol)ci=i;else em=i;w.querySelectorAll('button').forEach(b=>b.classList.remove('on'));e.currentTarget.classList.add('on')}},isCol?'':x)));return w};
+  const send=btn('🎁 カードを送る',async()=>{
+    const t=ta.value.trim();if(!t)return;send.disabled=true;
+    try{await push(ref(db,(pri.checked?'private/':'wall/')+f.id),{from:me.uid,fromNm:prof.nm,t,ci,em:EM[em],y:nxt(f).y,ts:serverTimestamp()});ta.value='';out.textContent='🎉 送りました！'}
+    catch(e){out.textContent='送れませんでした（'+(e.code||'')+'）'}
+    send.disabled=false;
+  },'btn');
+  show(f.nm+'さんへ',ta,pick(COL,true),pick(EM,false),h('label',{class:'row'},pri,'🔒 非公開（'+f.nm+'さんだけに届く）'),h('p',{class:'note'},'チェックなしだと、'+f.nm+'さんの友だちにも見える公開カードになります。'),send,out,h('h2',{},'公開カード'),wl);
+  if(un)un();
+  un=onValue(ref(db,'wall/'+f.id),s=>{const L=list(s,'w',f.id).sort((a,b)=>(b.ts||0)-(a.ts||0));wl.replaceChildren(...(L.length?L.map(c=>cardEl(c,false)):[h('p',{class:'note'},'まだ公開カードはありません。')]))},()=>{});
+}
+async function dl(){
+  try{
+    const r=await fetch(base,{cache:'no-store'});if(!r.ok)throw 0;
+    const a=h('a',{href:URL.createObjectURL(await r.blob()),download:'birthday-cards.html'});document.body.append(a);a.click();a.remove();
+  }catch(e){msg('ここでは保存できません。公開したURLで開いて試してね。')}
+}
+
+function render(){
+  const A=$('#app');A.replaceChildren();
+  if(!me){A.append(loginBox());return}
+  if(!prof){A.append(profForm(false));return}
+  const all=[{...prof,id:me.uid,me:1},...friends].map(p=>({...p,...nxt(p)})).sort((a,b)=>a.dd-b.dd),td=all.filter(p=>p.dd===0);
+  if(td.length)A.append(h('div',{id:'ban'},'🎉 今日は '+td.map(p=>p.me?'あなた':p.nm+'さん').join('、')+' の誕生日！'));
+  A.append(h('div',{class:'row'},btn('📤 友だち招待QR',invite,'btn'),btn('💌 届いたカード'+(priv.length+wall.length?'（'+(priv.length+wall.length)+'）':''),inbox,'btn')));
+  A.append(h('h2',{},'もうすぐ誕生日'));
+  if(all.length===1)A.append(h('p',{class:'note'},'まだ友だちがいません。「友だち招待QR」を見せて、読み取ってもらおう！'));
+  all.forEach(p=>A.append(h('div',{class:'row2'},
+    h('div',{class:'g'},h('b',{},p.nm+(p.me?'（自分）':'')),h('div',{class:'note'},p.m+'月'+p.d+'日 ・ '+(p.dd===0?'🎉 今日！':'あと'+p.dd+'日'))),
+    p.me?btn('編集',()=>show('プロフィール',profForm(true))):btn('カードを書く',()=>compose(p)),
+    !p.me&&h('button',{class:'x2','aria-label':'友だち削除',onclick:async()=>{try{await remove(ref(db,`friends/${me.uid}/${p.id}`));await remove(ref(db,`friends/${p.id}/${me.uid}`))}catch(e){msg('削除できませんでした。')}}},'✕'))));
+  A.append(h('div',{class:'box'},h('b',{},'📲 アプリとして使う'),
+    h('div',{class:'row'},btn('⬇ アプリ（HTML）を保存',dl),btn('ログアウト',()=>signOut(auth))),
+    h('details',{},h('summary',{},'ホーム画面に追加する方法'),
+      h('p',{},'iPhone（Safari）：共有ボタン →「ホーム画面に追加」'),
+      h('p',{},'Android（Chrome）：右上のメニュー →「ホーム画面に追加」または「アプリをインストール」'))));
+}
+
+onAuthStateChanged(auth,async u=>{
+  subs.forEach(f=>f());subs=[];me=u;prof=null;friends=[];priv=[];wall=[];
+  if(u){
+    try{const s=await get(ref(db,'profiles/'+u.uid));prof=s.exists()?s.val():null}
+    catch(e){msg('データを読み込めませんでした（'+(e.code||'')+'）。Firebaseのルール設定を確認してね。')}
+    if(prof)start();
+  }
+  render();
+});
+render();
+</script>
+</body>
+</html>
