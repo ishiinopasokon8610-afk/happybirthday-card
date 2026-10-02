@@ -52,13 +52,14 @@ dialog::backdrop{background:#0a2a1b88}
 #pt span{position:absolute;bottom:-60px;opacity:0;animation:pop 3.4s ease-out forwards}
 @keyframes pop{0%{transform:translate(0,0) rotate(0);opacity:0}20%{opacity:1}75%{opacity:1}100%{transform:translate(var(--x),var(--y)) rotate(40deg);opacity:0}}
 details{margin-top:8px;font-size:14px;color:var(--sub)}
-#cv{position:fixed;inset:0;z-index:50;background:#6fc3bd;overflow:auto;color:#fff;padding:env(safe-area-inset-top,0px) 0 calc(24px + env(safe-area-inset-bottom,0px))}
-#cv .x{position:fixed;top:calc(env(safe-area-inset-top,0px) + 6px);left:10px;background:none;border:0;color:#fff;font-size:34px;line-height:1;cursor:pointer;z-index:2}
+#cv,#cl{position:fixed;inset:0;z-index:50;background:#6fc3bd;overflow:auto;color:#fff;padding:env(safe-area-inset-top,0px) 0 calc(24px + env(safe-area-inset-bottom,0px))}
+#cv .x,#cl .x{position:fixed;top:calc(env(safe-area-inset-top,0px) + 6px);left:10px;background:none;border:0;color:#fff;font-size:34px;line-height:1;cursor:pointer;z-index:2}
 .env{position:relative;width:min(86vw,380px);margin:56px auto 0}.env svg{display:block;width:100%;height:auto}
 .env .ttl{position:absolute;left:0;right:0;top:30%;text-align:center;font-size:clamp(22px,7vw,30px);font-weight:700;line-height:1.35;text-shadow:0 1px 4px #0004}
 .env .dt2{position:absolute;left:0;right:0;top:56%;text-align:center;font-size:14px;opacity:.85}
 .btn.line{background:#06c755}.btn.first{order:-1}
 .warn{background:#fff3e0;border:1px solid #f0b060;color:#8a4b00;border-radius:10px;padding:10px 12px;font-weight:700;font-size:15px;margin:8px 0}
+.paper.lk{background:#ffffffd9;color:#3f8c86;font-size:16px;padding:26px 18px}#cl .paper{margin:18px auto 0}
 .pl{transform-origin:50% 100%;animation:grow 1s cubic-bezier(.2,1.4,.4,1) both}
 @keyframes grow{from{transform:translateY(70px) scale(.7);opacity:0}to{transform:none;opacity:1}}
 .paper{width:min(86vw,380px);margin:28px auto 0;padding:34px 22px;box-shadow:0 2px 10px #0003;text-align:center;font-size:19px;line-height:1.9;white-space:pre-wrap;word-break:break-word}
@@ -141,7 +142,8 @@ try{const q=new URLSearchParams(location.search).get('add');if(q)sessionStorage.
 function show(t,...c){cur=null;$('#dt').textContent=t;$('#db').replaceChildren(...c.flat().filter(x=>x!=null&&x!==false));if(!$('#dlg').open)$('#dlg').showModal()}
 $('#dx').onclick=()=>$('#dlg').close();
 function ask(t,b,yl,fn){show(t,h('p',{},b),h('div',{class:'row'},btn('キャンセル',()=>$('#dlg').close(),'btn s ghost'),btn(yl,()=>{$('#dlg').close();fn()})))}
-const refresh=()=>{render();if($('#dlg').open&&cur)cur()};
+let curFull=null;
+const refresh=()=>{render();if($('#dlg').open&&cur)cur();if(curFull&&$('#cl'))curFull()};
 
 function qr(text,px){
   try{const q=qrcode(0,'L');q.addData(text);q.make();const n=q.getModuleCount(),s=Math.max(2,Math.floor(px/(n+8))),m=4*s,c=h('canvas');
@@ -269,10 +271,14 @@ function bunch(cards,fn,lk){
   });
   return w;
 }
-const unsend=(c,after)=>ask('カードの取り消し','自分が送ったカードを取り消します。よろしいですか？','取り消す',async()=>{try{await remove(ref(db,'wall/'+c.to+'/'+c.id))}catch(e){msg('取り消せませんでした。')}after()});
-function openCard(c,rec,back,p){
+const unsend=(c,after)=>ask('カードの取り消し','自分が送ったカードを取り消します。よろしいですか？','取り消す',async()=>{try{await remove(ref(db,'body/'+c.to+'/'+c.id));await remove(ref(db,'wall/'+c.to+'/'+c.id))}catch(e){msg('取り消せませんでした。')}after()});
+async function openCard(c,rec,back,p){
   const s=nxt(prof),lock=rec&&c.y===s.y&&s.dd>0;
   if(lock){show('カード',h('p',{class:'note'},'誕生日までお楽しみに！当日に開けるようになります。'),h('div',{class:'row'},btn('戻る',back,'btn s ghost')));return}
+  if(c.t==null){
+    try{const sn=await get(ref(db,(c.k==='p'?'privbody/':'body/')+c.to+'/'+c.id));if(!sn.exists())throw 0;c={...c,t:sn.val().t}}
+    catch(e){show('カード',h('p',{class:'note'},/denied/i.test((e&&(e.code||e.message))||'')?'誕生日までお楽しみに！当日に開けるようになります。':'カードを読み込めませんでした。'),h('div',{class:'row'},btn('戻る',back,'btn s ghost')));return}
+  }
   $('#dlg').close();
   const b=BG[c.bg]||BG.a1,o=h('div',{id:'cv'}),close=()=>{o.remove();back()},ev=h('div',{class:'env'}),pa=h('div',{class:'paper',style:bgStyle(b)},String(c.t||'').slice(0,300),h('div',{class:'fr'},'— '+String(c.fromNm||'').slice(0,20)+(c.k==='p'?'（非公開）':'')));
   ev.innerHTML=ENV;ev.append(h('div',{class:'ttl'},'誕生日おめでとう！',h('br'),p.nm+'さん'),h('div',{class:'dt2'},p.m+'月'+p.d+'日'));
@@ -287,21 +293,48 @@ function view(f,anim=true){
     h('p',{class:'note'},f.m+'月'+f.d+'日 ・ 風船 '+all.length+'個'),
     h('p',{class:'note'},open?(all.length?'風船をタップするとカードが読めます。':'まだ風船がありません。'):'風船とカードは、誕生日（'+f.m+'月'+f.d+'日）の当日まで見られません。'),
     open&&bunch(all,c=>openCard(c,false,()=>view(f,false),f)),
-    mine.map(c=>h('div',{class:'row2'},h('div',{class:'g note'},'送ったカード：'+String(c.t||'').slice(0,20)),btn('取り消す',()=>unsend(c,()=>view(f,false)),'btn s ghost'))),
+    mine.map(c=>h('div',{class:'row2'},h('div',{class:'g note'},'送ったカード（'+new Date(c.ts||Date.now()).toLocaleDateString('ja-JP')+'）'),btn('取り消す',()=>unsend(c,()=>view(f,false)),'btn s ghost'))),
     s.dd<=3?h('div',{class:'bar'},btn('素敵なカードを書く',()=>compose(f),'btn'),btn('風船を送る',e=>sendBalloon(f,e.currentTarget),'btn ghost')):h('p',{class:'note'},'カードや風船は、誕生日の3日前から送れます。'));
   cur=()=>view(f,false);
 }
-function inbox(anim=true){
-  if(anim)drawn.clear();
-  const L=[...(walls[me.uid]||[]),...priv].sort((a,b)=>(a.ts||0)-(b.ts||0));
-  show('わたしの風船',h('p',{class:'note'},'風船 '+L.length+'個（非公開 '+priv.length+'個を含む）'),
-    h('p',{class:'note'},L.length?'風船をタップするとカードが読めます。届いたカードは消せません。':'まだ届いていません。'),
-    bunch(L,c=>openCard(c,true,()=>inbox(false),prof),c=>{const s=nxt(prof);return c.y===s.y&&s.dd>0}));
-  cur=()=>inbox(false);
+const bodies={};
+function inbox(){
+  if($('#dlg').open)$('#dlg').close();
+  const draw=()=>{
+    const old=$('#cl'),st=old?old.scrollTop:0;if(old)old.remove();
+    const s=nxt(prof),L=[...(walls[me.uid]||[]),...priv].sort((a,b)=>(b.ts||0)-(a.ts||0)),o=h('div',{id:'cl'}),ev=h('div',{class:'env'});
+    ev.innerHTML=ENV;ev.append(h('div',{class:'ttl'},'✉ カード',h('br'),prof.nm+'さん'),h('div',{class:'dt2'},L.length?L.length+'枚届いています':'まだ届いていません'));
+    o.append(h('button',{class:'x','aria-label':'閉じる',onclick:()=>{curFull=null;o.remove()}},'‹'),ev);
+    L.forEach(c=>{
+      const lock=c.y===s.y&&s.dd>0,pa=h('div',{class:'paper'+(lock?' lk':'')});
+      if(lock)pa.textContent='🔒 誕生日までお楽しみに！';
+      else{
+        const t=c.t!=null?c.t:bodies[c.id];
+        if(c.t==null&&!(c.id in bodies)){
+          bodies[c.id]=null;
+          get(ref(db,(c.k==='p'?'privbody/':'body/')+c.to+'/'+c.id)).then(sn=>{bodies[c.id]=sn.exists()?String(sn.val().t||''):''}).catch(()=>{bodies[c.id]=''}).then(()=>{if(curFull)curFull()});
+        }
+        pa.setAttribute('style',bgStyle(BG[c.bg]||BG.a1));
+        if(t==null)pa.textContent='読み込み中…';
+        else if(t==='')pa.textContent='カードを読み込めませんでした。';
+        else pa.append(String(t).slice(0,300),h('div',{class:'fr'},'— '+String(c.fromNm||'').slice(0,20)+(c.k==='p'?'（非公開）':'')));
+      }
+      o.append(pa);
+    });
+    document.body.append(o);o.scrollTop=st;
+  };
+  curFull=draw;draw();
+}
+const openAt=p=>Date.UTC(nxt(p).y,p.m-1,p.d)-9*3600e3;
+async function sendCard(f,priv,t,bg,bl){
+  const r=push(ref(db,(priv?'private/':'wall/')+f.id));
+  await set(r,{from:me.uid,fromNm:prof.nm,bg,bl,y:nxt(f).y,ts:serverTimestamp(),ot:openAt(f)});
+  try{await set(ref(db,(priv?'privbody/':'body/')+f.id+'/'+r.key),{t})}
+  catch(e){try{await remove(r)}catch(_){}throw e}
 }
 async function sendBalloon(f,b){
   b.disabled=true;
-  try{await push(ref(db,'wall/'+f.id),{from:me.uid,fromNm:prof.nm,t:'お誕生日おめでとう！',bg:'a5',bl:Math.floor(Math.random()*BAL.length),y:nxt(f).y,ts:serverTimestamp()});msg('風船を送りました。')}
+  try{await sendCard(f,false,'お誕生日おめでとう！','a5',Math.floor(Math.random()*BAL.length));msg('風船を送りました。')}
   catch(e){msg('送れませんでした（'+(e.code||'')+'）')}
   b.disabled=false;
 }
@@ -322,7 +355,7 @@ function compose(f){
   const send=btn('🎈 風船をあげる',async()=>{
     const t=ta.value.trim();if(!t){out.textContent='メッセージを書いてね。';return}
     send.disabled=true;
-    try{await push(ref(db,(pri.checked?'private/':'wall/')+f.id),{from:me.uid,fromNm:prof.nm,t,bg,bl,y:nxt(f).y,ts:serverTimestamp()});$('#dlg').close();flyAway(hg);ta.value='';upd()}
+    try{await sendCard(f,pri.checked,t,bg,bl);$('#dlg').close();flyAway(hg);ta.value='';upd()}
     catch(e){out.textContent='送れませんでした（'+(e.code||'')+'）';send.disabled=false}
   },'btn');
   show(f.nm+'さんへのカード',hg,ta,cnt,chips,h('b',{},'背景'),pk,h('b',{},'風船の色'),bk,
@@ -359,7 +392,7 @@ async function lineBack(){
     const r=await httpsCallable(getFunctions(app,'asia-northeast1'),'lineAuth')({code});
     try{sessionStorage.setItem('lname',r.data.name||'')}catch(e){}
     await signInWithCustomToken(auth,r.data.token);
-  }catch(e){setKnown(false);msg('LINEでログインできませんでした（'+(e.code||e.message||'')+'）')}
+  }catch(e){setKnown(false);msg('LINEでログインできませんでした（'+(e.message||e.code||'')+'）')}
   lineBusy=false;if(!me){loading=false;render()}
 }
 
@@ -372,9 +405,9 @@ function render(){
   const my=nxt(prof),fl=friends.map(p=>({...p,...nxt(p)})).sort((a,b)=>a.dd-b.dd),td=[...(my.dd===0?['あなた']:[]),...fl.filter(p=>p.dd===0).map(p=>p.nm+'さん')];
   if(my.dd===0&&!partyDone){partyDone=true;party()}
   if(td.length)A.append(h('div',{id:'ban'},'今日は '+td.join('、')+' の誕生日！'));
-  A.append(h('div',{class:'box mine'},icon(()=>inbox(),'わたしの風船'),
-    h('div',{class:'g'},h('b',{},prof.nm),h('div',{class:'note'},prof.m+'月'+prof.d+'日 ・ '+(my.dd===0?'今日が誕生日！':'あと'+my.dd+'日')),h('div',{},'届いた風船 '+((walls[me.uid]||[]).length+priv.length)+'個')),
-    btn('風船を見る',()=>inbox()),btn('編集',()=>show('プロフィール編集',profForm(true)))));
+  A.append(h('div',{class:'box mine'},icon(()=>inbox(),'わたしのカード'),
+    h('div',{class:'g'},h('b',{},prof.nm),h('div',{class:'note'},prof.m+'月'+prof.d+'日 ・ '+(my.dd===0?'今日が誕生日！':'あと'+my.dd+'日')),h('div',{},'届いたカード '+((walls[me.uid]||[]).length+priv.length)+'枚')),
+    btn('✉ カード',()=>inbox()),btn('編集',()=>show('プロフィール編集',profForm(true)))));
   A.append(h('div',{class:'row'},btn('友だち招待QR',invite,'btn')));
   A.append(h('h2',{},'友だちの誕生日'));
   if(!fl.length)A.append(h('p',{class:'note'},'まだ友だちがいません。「友だち招待QR」を見せて読み取ってもらおう！'));
@@ -382,7 +415,7 @@ function render(){
     const n=(walls[p.id]||[]).filter(c=>c.y===p.y).length;
     A.append(h('div',{class:'row2'},icon(()=>view(p),p.nm+'さんの風船'),
       h('div',{class:'g'},h('b',{},p.nm),h('div',{class:'note'},p.m+'月'+p.d+'日 ・ '+(p.dd===0?'今日！':'あと'+p.dd+'日')),h('div',{class:'note'},'風船 '+n+'個')),
-      p.dd<=3&&btn('✉ カード',()=>compose(p)),
+      p.dd<=3&&btn('✉ カード',()=>compose(p)),p.dd<=3&&btn('🎈 風船',e=>sendBalloon(p,e.currentTarget)),
       h('button',{class:'x2',onclick:()=>ask('友だちを解除','「'+p.nm+'」さんとの友だちを解除します。お互いの誕生日と風船が見えなくなります。よろしいですか？','解除する',async()=>{try{await remove(ref(db,`friends/${me.uid}/${p.id}`));await remove(ref(db,`friends/${p.id}/${me.uid}`))}catch(e){msg('解除できませんでした。')}})},'解除')));
   });
   const fs=h('select',{onchange:e=>setFont(e.target.value)},Object.entries(FONTS).map(([k,v])=>h('option',{value:k},v.n)));fs.value=curFont();
