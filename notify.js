@@ -29,9 +29,10 @@ async function notify(uid,title,pushBody,text,html){
 }
 
 // ① カードが届いたとき（+1の風船は数が多いので通知しない。中身は誕生日当日まで秘密）
+//    アカウントの引っ越しで移ってきたカード（mig印つき）も通知しない
 const OPT={region:'asia-southeast1',instance:'happybithday-card-default-rtdb',secrets:[SMTP_USER,SMTP_PASS]};
 const onCard=ref=>onValueCreated({...OPT,ref},async ev=>{
-  const c=ev.data.val();if(!c||c.bg==='bal')return;
+  const c=ev.data.val();if(!c||c.bg==='bal'||c.mig)return;
   await notify(ev.params.to,'🎈 カードが届きました',`${c.fromNm||'友だち'}さんからカードが届きました。中身は誕生日の当日に読めます。`);
 });
 exports.onWallCard=onCard('/wall/{to}/{id}');
@@ -61,17 +62,18 @@ exports.birthdayDaily=onSchedule({schedule:'0 8 * * *',timeZone:'Asia/Tokyo',reg
   }
 });
 
-// ③ メール通知を登録したとき（アドレスの変更、またはオフ→オン）に確認メールを送る
-//    同じアドレスへは1時間に1通まで（連打防止）。記録は mailLog/{uid}（クライアントからは読み書き不可）
+// ③ メール通知を「保存」したとき、オンなら確認メールを送る（同じ内容で保存し直しても送る）
+//    アプリは保存のたびに ts（保存時刻）を書くので、同じアドレスでも保存を検知できる
+//    連打防止：同じアドレスへは1分に1通まで。記録は mailLog/{uid}（クライアントからは読み書き不可）
 exports.onNotifySaved=onValueWritten({...OPT,ref:'/notify/{uid}'},async ev=>{
   const b=ev.data.before.val(),a=ev.data.after.val();
   if(!a||!a.on||!a.em)return;
-  if(b&&b.on&&b.em===a.em)return;
+  if(b&&b.on&&b.em===a.em&&b.ts===a.ts)return;
   const uid=ev.params.uid,log=db().ref('mailLog/'+uid),old=(await log.get()).val();
-  if(old&&old.em===a.em&&Date.now()-old.ts<3600e3)return;
+  if(old&&old.em===a.em&&Date.now()-old.ts<60e3)return;
   await log.set({em:a.em,ts:Date.now()});
-  const text=`メール通知の登録ありがとう！\n\nこのアドレスに、次のときにお知らせします。\n・カードが届いたとき\n・自分や友だちの誕生日の朝\n\nメールが不要になったら、アプリの「メールでお知らせ」のチェックを外して保存してください。\n\n心当たりがない場合は、このメールは無視してください。`;
-  const html=`<p>メール通知の登録ありがとう！🎈</p><p>このアドレスに、次のときにお知らせします。</p><ul><li>カードが届いたとき</li><li>自分や友だちの誕生日の朝</li></ul><p>メールが不要になったら、アプリの「メールでお知らせ」のチェックを外して保存してください。</p><p style="color:#888;font-size:12px">心当たりがない場合は、このメールは無視してください。</p><p><a href="${SITE}">${SITE}</a></p>`;
+  const text=`メール通知の登録ありがとう！\n\nこのアドレスに、次のときにお知らせします。\n・カードが届いたとき\n・自分や友だちの誕生日の朝\n\nメールが不要になったら、アプリの「詳細設定」で「メールで通知する」のチェックを外して保存してください。\n\n心当たりがない場合は、このメールは無視してください。`;
+  const html=`<p>メール通知の登録ありがとう！🎈</p><p>このアドレスに、次のときにお知らせします。</p><ul><li>カードが届いたとき</li><li>自分や友だちの誕生日の朝</li></ul><p>メールが不要になったら、アプリの「詳細設定」で「メールで通知する」のチェックを外して保存してください。</p><p style="color:#888;font-size:12px">心当たりがない場合は、このメールは無視してください。</p><p><a href="${SITE}">${SITE}</a></p>`;
   try{await mail(a.em,'【おたんじょうびカード】メール通知を登録しました',text+'\n\n'+SITE,html)}
   catch(e){console.error('confirm mail',uid,e)}
 });

@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#2f9e6a" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0f1a14" media="(prefers-color-scheme: dark)">
+<meta id="tc" name="theme-color" content="#2f9e6a">
+<script>(function(){var t=null;try{t=localStorage.getItem('theme')}catch(e){}if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)})()</script>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/ishiinopasokon8610-afk/image-list/main/images/icon-512.png">
 <title>おたんじょうびカード</title>
 <style>
-:root{--bg:#f7fcf9;--fg:#1f3a2c;--sub:#6b8a79;--card:#fff;--line:#d3eadb;--acc:#2f9e6a;--acc2:#1f7a50;--tint:#eaf7ef;--inp:#fff;--warnbg:#fff3e0;--warnbd:#f0b060;--warnfg:#8a4b00;--ff:"Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;color-scheme:light dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{--bg:#f7fcf9;--fg:#1f3a2c;--sub:#6b8a79;--card:#fff;--line:#d3eadb;--acc:#2f9e6a;--acc2:#1f7a50;--tint:#eaf7ef;--inp:#fff;--warnbg:#fff3e0;--warnbd:#f0b060;--warnfg:#8a4b00;--ff:"Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--fg);font-size:16px;line-height:1.6;font-family:var(--ff)}
@@ -130,16 +130,20 @@ dialog[open]{animation:dlgin .4s cubic-bezier(.2,1.3,.4,1)}dialog[open]::backdro
 @font-face{font-family:"F_zenmaru";font-weight:900;src:url("fonts/zenmaru-black.woff2") format("woff2");font-display:swap}
 .gbc{position:absolute;top:-6px;right:-6px;background:var(--acc);color:#fff;border-radius:999px;font-size:12px;font-weight:700;padding:1px 7px}
 
-@media (prefers-color-scheme:dark){:root{--bg:#0f1a14;--fg:#e4f1e9;--sub:#8fae9d;--card:#17261e;--line:#2b4338;--acc2:#7fdca8;--tint:#1d3328;--inp:#0f1a14;--warnbg:#3a2a12;--warnbd:#8a6020;--warnfg:#ffcf8a}
-dialog::backdrop{background:#000a}
-#amb span{opacity:.18}
-.cv,.paper{box-shadow:0 2px 8px #0006}
-}
+:root[data-theme=dark]{--bg:#0f1a14;--fg:#e4f1e9;--sub:#8fae9d;--card:#17261e;--line:#2b4338;--acc2:#7fdca8;--tint:#1d3328;--inp:#0f1a14;--warnbg:#3a2a12;--warnbd:#8a6020;--warnfg:#ffcf8a;color-scheme:dark}
+:root[data-theme=dark] dialog::backdrop{background:#000a}
+:root[data-theme=dark] #amb span{opacity:.18}
+:root[data-theme=dark] .cv,:root[data-theme=dark] .paper{box-shadow:0 2px 8px #0006}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tg{flex:none;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--fg);font-size:20px;line-height:1;cursor:pointer;padding:0}
+.tg:active{transform:scale(.9)}
+a.btn{display:inline-block;text-decoration:none;text-align:center}
+.tcode{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:28px;font-weight:700;letter-spacing:.12em;text-align:center;background:var(--tint);color:var(--acc2);border-radius:12px;padding:12px 8px;margin:8px 0;user-select:all}
 </style>
 </head>
 <body>
 <main>
-<h1>おたんじょうびカード</h1>
+<div class="top"><h1>おたんじょうびカード</h1><button id="th" class="tg" type="button"></button></div>
 <p id="toast" class="note"></p>
 <div id="app"></div>
 </main>
@@ -169,6 +173,15 @@ const app=initializeApp({
 const auth=getAuth(app),db=getDatabase(app);
 
 const $=s=>document.querySelector(s);
+const curTheme=()=>document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';
+function applyTheme(t,save){
+  document.documentElement.setAttribute('data-theme',t);
+  const m=$('#tc');if(m)m.setAttribute('content',t==='dark'?'#0f1a14':'#2f9e6a');
+  const b=$('#th');if(b){const l=t==='dark'?'ライトモードにする':'ダークモードにする';b.textContent=t==='dark'?'☀️':'🌙';b.setAttribute('aria-label',l);b.title=l}
+  if(save){try{localStorage.setItem('theme',t)}catch(e){}}
+}
+$('#th').onclick=()=>applyTheme(curTheme()==='dark'?'light':'dark',true);
+applyTheme(curTheme());
 const h=(t,a={},...c)=>{const e=document.createElement(t);for(const k in a){if(k==='class')e.className=a[k];else if(k.startsWith('on'))e[k]=a[k];else e.setAttribute(k,a[k])}c.flat().forEach(x=>{if(x!=null&&x!==false)e.append(x)});return e};
 const BAL=['#2f9e6a','#7cc99a','#f2a6b8','#f6c85f','#79b8f0','#b69cf0'];
 const CATS=['かわいい','かっこいい','ほっこり'];
@@ -189,7 +202,7 @@ const btn=(l,f,c='btn s')=>h('button',{class:c,onclick:f},l);
 const okP=p=>p&&p.m>=1&&p.m<=12&&p.d>=1&&p.d<=31;
 const notifOn=()=>{try{return localStorage.getItem('notif')==='1'&&Notification.permission==='granted'}catch(e){return false}};
 
-let me=null,prof=null,friends=[],priv=[],walls={},cnt={},wsubs={},subs=[],cur=null,seen={},drawn=new Set(),partyDone=false,loading=true,slow=false,loadErr=false,started=false,hint=null,hintBusy=false,mailEl=null;
+let me=null,prof=null,friends=[],priv=[],walls={},cnt={},wsubs={},subs=[],cur=null,seen={},drawn=new Set(),partyDone=false,loading=true,slow=false,loadErr=false,started=false,hint=null,hintBusy=false,xferUn=null,nameOnly=false;
 try{const q=new URLSearchParams(location.search).get('add');if(q)sessionStorage.setItem('add',q)}catch(e){}
 
 function show(t,...c){cur=null;$('#dt').textContent=t;$('#db').replaceChildren(...c.flat().filter(x=>x!=null&&x!==false));if(!$('#dlg').open)$('#dlg').showModal()}
@@ -236,6 +249,7 @@ function start(){
     refresh();
   });
   on('private/'+uid,s=>{priv=list(s,'p',uid);notice(priv,'p');refresh()});
+  on('settings/'+uid+'/font',s=>{const k=s.val();if(k&&FONTS[k]&&k!==curFont()){setFont(k);render()}});
   pend();refreshTok();
 }
 async function pend(){
@@ -279,13 +293,140 @@ async function enableNotif(){
     localStorage.setItem('notif','1');msg('通知をオンにしました。');render();
   }catch(e){msg(e.code==='unsupported'?'この端末は通知に対応していません。メール通知をお使いください。':'通知をオンにできませんでした（'+(e.code||e.message||'')+'）')}
 }
+// 初めて入ったとき（この端末で1回だけ）、通知の許可をお願いする画面を出す
+function askNotifOnce(next){
+  const go=()=>{if(next)next()};
+  let asked=false;try{asked=localStorage.getItem('notifAsked')==='1'}catch(e){}
+  if(asked||inApp||!('Notification' in window)||!('serviceWorker' in navigator)||Notification.permission!=='default'||(isIOS&&!standalone())){go();return}
+  try{localStorage.setItem('notifAsked','1')}catch(e){}
+  show('通知をオンにしますか？',
+    h('p',{},'カードが届いたときや、自分・友だちの誕生日に、この端末へお知らせします。'),
+    h('p',{class:'note'},'次の画面で「許可」を選んでね。あとから「通知」の欄でも変えられます。'),
+    h('div',{class:'row'},btn('あとで',()=>{$('#dlg').close();go()},'btn s ghost'),btn('通知をオンにする',async()=>{$('#dlg').close();await enableNotif();go()},'btn')));
+}
 function mailBox(){
   const em=h('input',{type:'email',placeholder:'メールアドレス',maxlength:100,value:me.email||'',style:'flex:1;min-width:0'}),on=h('input',{type:'checkbox'}),out=h('p',{class:'note'});
   get(ref(db,'notify/'+me.uid)).then(x=>{const v=x.val();if(v){em.value=v.em||em.value;on.checked=!!v.on}}).catch(()=>{});
   return h('div',{},h('div',{class:'row'},em),h('label',{class:'row'},on,'メールで通知する'),
     btn('保存',async()=>{const v=em.value.trim();
       if(on.checked&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){out.textContent='メールアドレスを正しく入力してね。';return}
-      try{await set(ref(db,'notify/'+me.uid),{em:v,on:on.checked});out.textContent=on.checked?'保存しました。確認メールを送ります。届かないときは迷惑メールも見てね。':'保存しました。'}catch(e){out.textContent='保存できませんでした（'+(e.code||'')+'）'}},'btn s'),out);
+      try{await set(ref(db,'notify/'+me.uid),{em:v,on:on.checked,ts:Date.now()});out.textContent=on.checked?'保存しました。確認メールを送ります（1分ほどかかることがあります）。届かないときは迷惑メールも見てね。':'保存しました。'}catch(e){out.textContent='保存できませんでした（'+(e.code||'')+'）'}},'btn s'),out);
+}
+
+// ---- 詳細設定（メール・引っ越し・ライセンス） ----
+const LICENSE_URL='https://ishiinopasokon8610-afk.github.io/License';
+const callFn=n=>httpsCallable(getFunctions(app,'asia-northeast1'),n);
+// サーバーの日本語メッセージはそのまま、英語の通信エラー（internal など）は分かりやすい文に直す
+const fnErr=e=>{const m=(e&&e.message)||'';return /[\u3040-\u30ff\u4e00-\u9fff]/.test(m)?m:'いまサーバーにつながりません。しばらくしてからもう一度試してね。（'+(m||(e&&e.code)||'error')+'）'};
+const hr=()=>h('hr',{style:'border:0;border-top:1px solid var(--line);margin:16px 0'});
+async function doLogout(){try{const d=localStorage.getItem('dev');if(d)await remove(ref(db,`tokens/${me.uid}/${d}`));localStorage.removeItem('notif')}catch(e){}setKnown(false);signOut(auth)}
+function advanced(){
+  show('詳細設定',
+    h('b',{},'メールでお知らせ'),
+    h('p',{class:'note'},'①カードが届いたとき ②自分や友だちの誕生日の朝（自分の分は、届いたメッセージの内容つき）にメールします。端末の通知が使えない人もこちらで受け取れます。'),
+    mailBox(),hr(),
+    h('b',{},'アカウントの引っ越し'),
+    h('p',{class:'note'},'LINE・Google・名前だけで始めた人、どの組み合わせでも、友だちやカードのデータを別のログイン方法に移せます。（例：LINEで使っていた人がGoogleに移す／名前だけの人がGoogleやLINEに移す）'),
+    transferBox(),hr(),
+    nameOnly&&[h('b',{},'復元コード（名前だけで始めた人用）'),
+      h('p',{class:'note'},'コードを控えておけば、ログアウトしても、端末のデータを消しても、別の端末で開いても、ログイン画面の「復元コードで続きから」から元のデータに戻れます。作り直すと、前のコードは使えなくなります。'),
+      h('div',{class:'row'},btn('復元コードを作る',()=>recoveryDlg(false))),hr()],
+    h('b',{},'ライセンス'),
+    h('div',{class:'row'},h('a',{class:'btn s ghost',href:LICENSE_URL,target:'_blank',rel:'noopener'},'ライセンスを見る')));
+}
+function transferBox(){
+  const out=h('p',{class:'note'}),area=h('div',{});
+  const mk=btn('引っ越しコードを作る',async()=>{
+    mk.disabled=true;out.textContent='コードを作っています…';
+    try{
+      const r=(await callFn('makeTransferCode')()).data;
+      area.replaceChildren(h('div',{class:'tcode'},r.code),copyBox(r.code),
+        h('p',{class:'note'},'10分以内に、新しく使うほうでログインして、このコードを入れてね。1回しか使えません。他の人には教えないでね。引き継ぎが終わると、このアカウントは空になり、この端末は自動でログアウトします。'));
+      out.textContent='';watchMoved();
+    }catch(e){out.textContent=fnErr(e)}
+    mk.disabled=false;
+  },'btn s');
+  return h('div',{},
+    h('p',{class:'note'},'① いままで使っていたほうでログインして、コードを作る'),
+    h('div',{class:'row'},mk),area,out,
+    h('p',{class:'note'},'② 新しく使うほうでログインして、コードを入れる（はじめての登録画面にも入口があります）'),
+    claimBox());
+}
+function watchMoved(){
+  if(xferUn){xferUn();xferUn=null}
+  const uid=me.uid;let had=false;
+  xferUn=onValue(ref(db,'profiles/'+uid),s=>{
+    if(s.exists()){had=true;return}
+    if(!had)return;
+    if(xferUn){xferUn();xferUn=null}
+    try{localStorage.removeItem('prof_'+uid)}catch(e){}
+    if($('#dlg').open)$('#dlg').close();
+    doLogout();msg('引っ越しが完了しました。新しく使うほうのログイン方法でログインしてね。');
+  },()=>{});
+}
+function claimBox(){
+  const inp=h('input',{placeholder:'ABCDE-FGHJK',maxlength:14,autocapitalize:'characters',autocomplete:'off',style:'flex:1;min-width:0'}),out=h('p',{class:'note'});
+  return h('div',{},h('div',{class:'row'},inp,btn('引き継ぐ',()=>{
+    const c=inp.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+    if(c.length!==10){out.textContent='コードは10文字です。もう一度見てね。';return}
+    ask('データの引き継ぎ','引っ越し元のプロフィール・友だち・カードを、いまのアカウントに移します。いまのアカウントのプロフィール（名前・誕生日）は、引っ越し元のものに置き換わります。友だちとカードは合わさります。引っ越し元は空になります。よろしいですか？','引き継ぐ',()=>claimRun(c));
+  },'btn s')),out);
+}
+// ---- 名前だけの人の「復元コード」 ----
+function logoutNameOnly(){
+  show('ログアウトの確認',
+    h('p',{class:'warn'},'名前だけのアカウントは、「復元コード」を控えていないと、ログアウトしたあとに元へ戻れません。'),
+    h('p',{class:'note'},'コードを控えておけば、ログアウトしても、ログイン画面の「復元コードで続きから」で戻れます。（GoogleやLINEに引っ越す方法もあります）'),
+    h('div',{class:'row'},btn('復元コードを作る',()=>recoveryDlg(true),'btn')),
+    h('div',{class:'row'},btn('控えてあるのでログアウト',()=>{$('#dlg').close();doLogout()},'btn s ghost'),btn('やめる',()=>$('#dlg').close(),'btn s ghost')));
+}
+async function recoveryDlg(thenLogout){
+  show('復元コード',h('p',{},'コードを作っています…'));
+  try{
+    const code=(await callFn('makeRecoveryCode')()).data.code;
+    show('復元コード',
+      h('p',{class:'warn'},'このコードは今だけ表示します。メモやスクリーンショットで、必ず控えてね。'),
+      h('div',{class:'tcode',style:'font-size:clamp(15px,5.2vw,22px)'},code),copyBox(code),
+      h('p',{class:'note'},'ログアウトしたあとや、端末のデータを消したあと、別の端末で開いたときも、ログイン画面の「復元コードで続きから」にこのコードを入れると、続きから使えます。パスワードと同じなので、他の人には教えないでね。新しく作ると、前のコードは使えなくなります。'),
+      h('div',{class:'row'},thenLogout&&btn('控えたのでログアウトする',()=>{$('#dlg').close();doLogout()},'btn'),btn('閉じる',()=>$('#dlg').close(),'btn s ghost')));
+  }catch(e){
+    show('復元コード',h('p',{},fnErr(e)),h('p',{class:'note'},'あとで「詳細設定」からも作れます。'),h('div',{class:'row'},btn('もう一度試す',()=>recoveryDlg(thenLogout),'btn'),btn('閉じる',()=>$('#dlg').close(),'btn s ghost')));
+  }
+}
+function recoverDlg(){
+  const inp=h('input',{placeholder:'XXXX-XXXX-XXXX-XXXX',maxlength:24,autocapitalize:'characters',autocomplete:'off',style:'flex:1;min-width:0'}),out=h('p',{class:'note'});
+  show('復元コードで続きから',
+    h('p',{class:'note'},'名前だけで始めたアカウントの「復元コード」を入れてね。'),
+    h('div',{class:'row'},inp,btn('続きから使う',()=>{
+      const c=inp.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+      if(c.length!==16){out.textContent='コードは16文字です。もう一度見てね。';return}
+      $('#dlg').close();recoverRun(c);
+    },'btn s')),out);
+}
+async function recoverRun(code){
+  lineBusy=true;loading=true;slow=false;setKnown(true);msg('');render();slowTimer();
+  try{
+    const r=await callFn('recoverLogin')({code});
+    await signInWithCustomToken(auth,r.data.token);
+  }catch(e){setKnown(false);msg('続きから使えませんでした：'+fnErr(e))}
+  lineBusy=false;if(!me){loading=false;render()}
+}
+function claimDlg(){
+  show('前のアカウントから引き継ぐ',
+    h('p',{class:'note'},'前に使っていたほう（LINE・Google・名前だけ）でログインして、「詳細設定」→「引っ越しコードを作る」で出るコードを入れてね。'),
+    claimBox(),h('div',{class:'row'},btn('閉じる',()=>$('#dlg').close(),'btn s ghost')));
+}
+async function claimRun(code){
+  show('引き継ぎ中…',h('p',{},'データを移しています。数十秒かかることがあります。閉じずに待ってね。'));
+  try{
+    const r=(await callFn('claimTransfer')({code})).data||{};
+    subs.forEach(f=>f());subs=[];Object.values(wsubs).forEach(f=>f());wsubs={};walls={};cnt={};seen={};friends=[];priv=[];started=false;prof=null;hint=null;
+    try{localStorage.removeItem('prof_'+me.uid)}catch(e){}
+    loading=true;slow=false;render();slowTimer();loadProfile(me);
+    show('引き継ぎが完了しました',h('p',{},'友だち '+(r.friends|0)+'人、風船・カード '+(r.cards|0)+'枚を引き継ぎました。'),h('div',{class:'row'},btn('閉じる',()=>$('#dlg').close(),'btn')));
+  }catch(e){
+    show('引き継げませんでした',h('p',{},fnErr(e)),h('div',{class:'row'},btn('閉じる',()=>$('#dlg').close(),'btn s ghost')));
+  }
 }
 
 // ---- 画面 ----
@@ -332,8 +473,8 @@ function loginBox(){
         if(!['auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(e.code))msg('ログインできませんでした（'+(e.code||'')+'）');
       }
     },'btn'),btn('LINEでログイン',lineLogin,'btn line'+(isLine?' first':''))),
-    h('div',{class:'row'},btn('GoogleもLINEも持っていない人はこちら',anonLogin,'btn ghost')),
-    h('p',{class:'note'},'こちらは、下の名前（フルネームNG）と誕生日を入力して始めます。この端末のデータを消すと、続きから使えなくなります。'));
+    h('div',{class:'row'},btn('GoogleもLINEも持っていない人はこちら',anonLogin,'btn ghost'),btn('復元コードで続きから',recoverDlg,'btn ghost')),
+    h('p',{class:'note'},'こちらは、下の名前（フルネームNG）と誕生日を入力して始めます。登録のあとに「復元コード」が出るので、控えておいてね。ログアウトしたり、端末のデータを消したりしても、そのコードで続きから使えます。'));
 }
 function loadingBox(){
   return h('div',{class:'box'},h('p',{},'ログイン中…'),
@@ -362,10 +503,12 @@ function profForm(edit){
       if(!m||!d||new Date(2024,m-1,d).getMonth()!==m-1){msg('誕生日を正しく選んでね。');return}
       const p={nm:v.slice(0,20),m,d},first=!prof;
       try{await set(ref(db,'profiles/'+me.uid),p);prof=p;hint=null;msg('');
-        if(first&&me.email&&me.providerData.some(x=>x.providerId==='google.com'))set(ref(db,'notify/'+me.uid),{em:me.email,on:true}).catch(()=>{});
-        if($('#dlg').open)$('#dlg').close();if(first)start();render()}
+        if(first&&me.email&&me.providerData.some(x=>x.providerId==='google.com'))set(ref(db,'notify/'+me.uid),{em:me.email,on:true,ts:Date.now()}).catch(()=>{});
+        if($('#dlg').open)$('#dlg').close();if(first)start();render();if(first)askNotifOnce(me.isAnonymous?()=>recoveryDlg(false):null)}
       catch(e){msg('保存できませんでした（'+(e.code||'')+'）。Firebaseのルール設定を確認してね。')}
-    },'btn'));
+    },'btn'),
+    !edit&&h('p',{class:'note'},'前に使っていたアカウント（LINE・Google・名前だけ）のデータがある人は、ここから引き継げます。'),
+    !edit&&btn('前のアカウントから引き継ぐ',claimDlg,'btn s ghost'));
 }
 function invite(){
   const u=base+'?add='+me.uid;
@@ -567,14 +710,14 @@ function render(){
       btn('📖 カード',()=>pickYear(p)),p.dd<=3&&btn('✉ 書く',()=>compose(p)),p.dd<=3&&btn('🎈 風船',e=>sendBalloon(p,e.currentTarget)),
       h('button',{class:'x2',onclick:()=>ask('友だちを解除','「'+p.nm+'」さんとの友だちを解除します。お互いの誕生日と風船が見えなくなります。よろしいですか？','解除する',async()=>{try{await remove(ref(db,`friends/${me.uid}/${p.id}`));await remove(ref(db,`friends/${p.id}/${me.uid}`))}catch(e){msg('解除できませんでした。')}})},'解除')));
   });
-  const fs=h('select',{onchange:e=>setFont(e.target.value)},Object.entries(FONTS).map(([k,v])=>h('option',{value:k},v.n)));fs.value=curFont();
+  const fs=h('select',{onchange:e=>{const k=e.target.value;setFont(k);set(ref(db,`settings/${me.uid}/font`),k).catch(()=>{})}},Object.entries(FONTS).map(([k,v])=>h('option',{value:k},v.n)));fs.value=curFont();
   A.append(h('div',{class:'box'},h('b',{},'設定'),h('div',{class:'row'},'フォント',fs)));
   A.append(h('div',{class:'box'},h('b',{},'通知'),
     h('p',{class:'note'},'カードが届いたときや、自分・友だちの誕生日に、この端末へ通知します。iPhoneは「ホーム画面に追加」したアプリから設定してね。'),
     btn(notifOn()?'通知はオン':'通知をオンにする',enableNotif)));
-  A.append(h('div',{class:'box'},h('b',{},'メールでお知らせ'),h('p',{class:'note'},'①カードが届いたとき ②自分や友だちの誕生日の朝（自分の分は、届いたメッセージの内容つき）にメールします。端末の通知が使えない人もこちらで受け取れます。'),mailEl||(mailEl=mailBox())));
+  A.append(h('div',{class:'box'},h('b',{},'詳細設定'),h('p',{class:'note'},'メールでのお知らせ、アカウントの引っ越し、ライセンスはこちら。'),btn('詳細設定',advanced)));
   A.append(h('div',{class:'box'},h('b',{},'アプリとして使う'),
-    h('div',{class:'row'},btn('ログアウト',async()=>{try{const d=localStorage.getItem('dev');if(d)await remove(ref(db,`tokens/${me.uid}/${d}`));localStorage.removeItem('notif')}catch(e){}setKnown(false);signOut(auth)})),
+    h('div',{class:'row'},btn('ログアウト',()=>nameOnly?logoutNameOnly():doLogout())),
     h('details',{},h('summary',{},'ホーム画面に追加する方法'),
       h('p',{},'iPhone（Safari）：共有ボタン →「ホーム画面に追加」'),
       h('p',{},'Android（Chrome）：右上のメニュー →「ホーム画面に追加」または「アプリをインストール」'))));
@@ -590,11 +733,14 @@ async function loadProfile(u){
     if(prof){try{localStorage.setItem('prof_'+u.uid,JSON.stringify(prof))}catch(e){}if(!started){started=true;start()}}
   }catch(e){loadErr=e.code||'error'}
   loading=false;render();
+  if(prof&&me&&me.uid===u.uid)setTimeout(()=>{if(!$('#dlg').open)askNotifOnce()},800);
 }
 onAuthStateChanged(auth,u=>{
   subs.forEach(f=>f());subs=[];Object.values(wsubs).forEach(f=>f());wsubs={};walls={};cnt={};seen={};
-  me=u;mailEl=null;prof=null;friends=[];priv=[];started=false;loadErr=false;
+  if(xferUn){xferUn();xferUn=null}
+  me=u;nameOnly=!!u&&u.isAnonymous;prof=null;friends=[];priv=[];started=false;loadErr=false;
   if(!u){loading=lineBusy;render();return}
+  u.getIdTokenResult().then(t=>{if(me===u&&t.claims.rec===true)nameOnly=true}).catch(()=>{});
   setKnown(true);
   let c=null;try{c=JSON.parse(localStorage.getItem('prof_'+u.uid))}catch(e){}
   if(okP(c)){prof=c;started=true;start();loading=false;render()}
