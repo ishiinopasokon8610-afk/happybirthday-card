@@ -7,8 +7,8 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/ishiinopasokon8610-afk/image-list/main/images/Gemini_Generated_Image_eo3a7feo3a7feo3a-removebg-preview.png">
-<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/ishiinopasokon8610-afk/image-list/main/images/Gemini_Generated_Image_eo3a7feo3a7feo3a-removebg-preview.png">
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/ishiinopasokon8610-afk/image-list/main/images/icon-512.png">
+<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/ishiinopasokon8610-afk/image-list/main/images/icon-512.png">
 <title>おたんじょうびカード</title>
 <style>
 :root{--bg:#f7fcf9;--fg:#1f3a2c;--sub:#6b8a79;--card:#fff;--line:#d3eadb;--acc:#2f9e6a;--acc2:#1f7a50;--tint:#eaf7ef;--ff:"Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -211,7 +211,7 @@ function start(){
   const watch=id=>{
     if(wsubs[id])return;
     const pr=id===uid?prof:friends.find(f=>f.id===id),y=pr?nxt(pr).y:null,no=()=>{};
-    const u1=onValue(ref(db,'wall/'+id),s=>{walls[id]=list(s,'w',id);if(id===uid)notice(walls[id],'w');refresh()},no);
+    const u1=onValue(ref(db,'wall/'+id),s=>{walls[id]=list(s,'w',id);if(id===uid)notice(walls[id],'w');refresh()},e=>{if(id===uid)msg('カードの読み込みエラー：'+(e.code||''))});
     const u2=y!=null?onValue(ref(db,`balloons/${id}/${y}/w`),s=>{cnt[id+'w']=s.val();refresh()},no):no;
     const u3=y!=null&&id===uid?onValue(ref(db,`balloons/${id}/${y}/p`),s=>{cnt[id+'p']=s.val();refresh()},no):no;
     wsubs[id]=()=>{u1();u2();u3()};
