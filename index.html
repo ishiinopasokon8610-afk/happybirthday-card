@@ -3,48 +3,63 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#ff6b81">
+<meta name="theme-color" content="#2f9e6a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>おたんじょうびカード</title>
 <style>
-:root{--bg:#fff8f3;--fg:#3b2f2f;--sub:#8a7a76;--card:#fff;--line:#f0dfd6;--acc:#ff6b81;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1e1819;--fg:#f6ebe7;--sub:#b3a09b;--card:#2a2223;--line:#3d3133}}
-:root[data-theme="dark"]{--bg:#1e1819;--fg:#f6ebe7;--sub:#b3a09b;--card:#2a2223;--line:#3d3133}
+:root{--bg:#f7fcf9;--fg:#1f3a2c;--sub:#6b8a79;--card:#fff;--line:#d3eadb;--acc:#2f9e6a;--acc2:#1f7a50;--tint:#eaf7ef;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 "Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif}
 main{max-width:640px;margin:0 auto;padding:16px}
-h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:20px 0 4px}
+h1{font-size:22px;margin:0 0 4px;color:var(--acc2)}h2{font-size:17px;margin:20px 0 4px;color:var(--acc2)}
 .note{color:var(--sub);font-size:14px;margin:4px 0}
 .box,.row2{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:12px 0}
 .row2{display:flex;align-items:center;gap:8px;margin:8px 0}
+.mine{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .g{flex:1;min-width:0}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
-#ban{background:linear-gradient(90deg,var(--acc),#ffb35c);color:#fff;border-radius:14px;padding:12px 16px;font-weight:700;margin:12px 0}
+#ban{background:linear-gradient(90deg,var(--acc),#7cc99a);color:#fff;border-radius:14px;padding:12px 16px;font-weight:700;margin:12px 0}
 .btn{background:var(--acc);color:#fff;border:0;border-radius:999px;padding:.6em 1.1em;font:inherit;font-weight:700;cursor:pointer}
 .btn.s{padding:.35em .9em;font-size:14px}
+.btn.ghost{background:var(--tint);color:var(--acc2)}
 .btn:disabled{opacity:.5}
-.x2{background:none;border:0;color:var(--sub);cursor:pointer;font-size:16px}
-select,textarea,input:not([type=checkbox]){border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit;background:var(--bg);color:var(--fg)}
+.x2{background:none;border:0;color:var(--sub);cursor:pointer;font-size:13px;text-decoration:underline}
+select,textarea,input:not([type=checkbox]){border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit;background:#fff;color:var(--fg)}
 textarea{width:100%;min-height:96px;resize:vertical}
 input[readonly]{flex:1;min-width:0}
-.sw{width:32px;height:32px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0}
-.eb{font-size:22px;background:none;border:2px solid transparent;border-radius:10px;cursor:pointer;padding:2px 6px}
-.sw.on,.eb.on{outline:3px solid var(--acc)}
+.sw{width:30px;height:30px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
+.bgb{width:64px;height:44px;border-radius:10px;border:1px solid var(--line);cursor:pointer;padding:0}
+.sw.on,.bgb.on{outline:3px solid var(--acc);outline-offset:1px}
 .qrb{text-align:center}.qrb canvas{background:#fff}
-dialog{border:0;border-radius:18px;padding:16px;background:var(--card);color:var(--fg);width:min(92vw,520px);max-height:88vh}
-dialog::backdrop{background:#0008}
-.dh{display:flex;justify-content:space-between;align-items:center;font-size:18px}
+dialog{border:0;border-radius:18px;padding:16px;background:var(--card);color:var(--fg);width:min(94vw,520px);max-height:90vh;overflow:auto}
+dialog::backdrop{background:#0a2a1b88}
+.dh{display:flex;justify-content:space-between;align-items:center;font-size:18px;color:var(--acc2)}
 .dh button{background:none;border:0;font-size:20px;color:var(--fg);cursor:pointer}
-.mc{position:relative;color:#3b2f2f;border-radius:14px;padding:14px 34px 12px 14px;margin:10px 0;white-space:pre-wrap;word-break:break-word}
-.mc .fr{font-size:13px;opacity:.7;margin-top:6px;text-align:right}
-.mc .x2{position:absolute;top:4px;right:6px;color:inherit;opacity:.6}
+.bunch{display:flex;flex-wrap:wrap;gap:6px 2px;justify-content:center;padding:8px 0;min-height:90px;overflow:hidden}
+.bal{background:none;border:0;padding:0;cursor:pointer;animation:bob 3s ease-in-out infinite}
+.bal.rise{animation:rise .9s cubic-bezier(.2,.8,.3,1) both,bob 3s ease-in-out infinite;animation-delay:var(--d,0s),calc(var(--d,0s) + .9s)}
+.mini{animation:none!important}.mini svg{width:30px;height:auto}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes rise{from{transform:translateY(280px);opacity:0}to{transform:none;opacity:1}}
+.cv{min-height:130px;border-radius:14px;padding:18px;white-space:pre-wrap;word-break:break-word;font-size:17px;line-height:1.7;box-shadow:0 2px 8px #0002;margin:8px 0}
+.cv .fr{font-size:13px;opacity:.8;margin-top:10px;text-align:right}
+.bar{display:flex;gap:8px;margin-top:14px}.bar .btn{flex:1}
+.creator{margin:24px 0;padding:14px;border:1px solid var(--acc);border-radius:14px;background:var(--tint);text-align:center}
+#pt{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:60}
+#pt span{position:absolute;bottom:-60px;opacity:0;animation:pop 3.4s ease-out forwards}
+@keyframes pop{0%{transform:translate(0,0) rotate(0);opacity:0}20%{opacity:1}75%{opacity:1}100%{transform:translate(var(--x),var(--y)) rotate(40deg);opacity:0}}
 details{margin-top:8px;font-size:14px;color:var(--sub)}
+@media (prefers-reduced-motion:reduce){.bal,.bal.rise{animation:none}#pt{display:none}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 </head>
 <body>
 <main>
-<h1>🎂 おたんじょうびカード</h1>
+<h1>おたんじょうびカード</h1>
 <p id="toast" class="note"></p>
 <div id="app"></div>
 </main>
@@ -56,6 +71,10 @@ details{margin-top:8px;font-size:14px;color:var(--sub)}
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import {getDatabase,ref,get,set,push,remove,onValue,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import {getMessaging,getToken} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-messaging.js";
+
+// Firebaseコンソール → プロジェクトの設定 → Cloud Messaging → ウェブ プッシュ証明書 で作ったキーペアの「公開キー」を貼る
+const VAPID='ここにウェブプッシュ証明書の公開キーを貼る';
 
 const app=initializeApp({
   apiKey:"AIzaSyCJ2QkzoZDozn1c6WmNet_IFFgzto4PyDc",
@@ -70,20 +89,35 @@ const auth=getAuth(app),db=getDatabase(app);
 
 const $=s=>document.querySelector(s);
 const h=(t,a={},...c)=>{const e=document.createElement(t);for(const k in a){if(k==='class')e.className=a[k];else if(k.startsWith('on'))e[k]=a[k];else e.setAttribute(k,a[k])}c.flat().forEach(x=>{if(x!=null&&x!==false)e.append(x)});return e};
-const COL=['#ffe3e8','#fff3c4','#dcf5e4','#e0ecff'],EM=['🎂','🎉','🎈','💐','🌟','🎁'];
+const BAL=['#2f9e6a','#7cc99a','#f2a6b8','#f6c85f','#79b8f0','#b69cf0'];
+const CATS=['かわいい','かっこいい','ほっこり'];
+const BG={
+ c1:{n:'ドット',k:'かわいい',css:'radial-gradient(#fff 24%,transparent 26%) 0 0/22px 22px,#ffc3d8',fg:'#6b2340'},
+ c2:{n:'パステル',k:'かわいい',css:'linear-gradient(135deg,#ffd3e6,#dccdff 55%,#c9eeff)',fg:'#4d3a6b'},
+ c3:{n:'ストライプ',k:'かわいい',css:'repeating-linear-gradient(45deg,#fff1f6 0 12px,#ffd8e6 12px 24px)',fg:'#7a2a4a'},
+ k1:{n:'ミッドナイト',k:'かっこいい',css:'linear-gradient(160deg,#0e1b2d,#1d3b5c 60%,#2b6384)',fg:'#f2f7ff'},
+ k2:{n:'ゴールドライン',k:'かっこいい',css:'repeating-linear-gradient(90deg,transparent 0 22px,rgba(212,175,55,.4) 22px 23px),#1c1c1c',fg:'#f3e3a8'},
+ k3:{n:'ネオン',k:'かっこいい',css:'linear-gradient(135deg,#0b0f2a,#3a1c71 55%,#00a8d6)',fg:'#ffffff'},
+ h1:{n:'クラフト紙',k:'ほっこり',css:'repeating-linear-gradient(0deg,#efdfc2 0 3px,#e8d5b3 3px 6px)',fg:'#5a3f22'},
+ h2:{n:'ギンガム',k:'ほっこり',css:'repeating-conic-gradient(#fff4d8 0 25%,#f7e0a6 0 50%) 0 0/28px 28px',fg:'#5b4320'},
+ h3:{n:'みずたま',k:'ほっこり',css:'radial-gradient(#fff 22%,transparent 24%) 0 0/20px 20px,#bfe3c8',fg:'#24523a'}
+};
 const base=location.href.split(/[?#]/)[0];
 const msg=t=>{$('#toast').textContent=t||''};
+const rid=()=>Math.random().toString(36).slice(2,12);
 const nxt=p=>{const n=new Date(),t=new Date(n.getFullYear(),n.getMonth(),n.getDate());let d=new Date(t.getFullYear(),p.m-1,p.d);if(d<t)d=new Date(t.getFullYear()+1,p.m-1,p.d);return{dd:Math.round((d-t)/864e5),y:d.getFullYear()}};
 const sel=n=>h('select',{},Array.from({length:n},(_,i)=>h('option',{value:i+1},i+1)));
 const btn=(l,f,c='btn s')=>h('button',{class:c,onclick:f},l);
 const okP=p=>p&&p.m>=1&&p.m<=12&&p.d>=1&&p.d<=31;
+const notifOn=()=>{try{return localStorage.getItem('notif')==='1'&&Notification.permission==='granted'}catch(e){return false}};
 
-let me=null,prof=null,friends=[],priv=[],wall=[],subs=[],un=null;
+let me=null,prof=null,friends=[],priv=[],walls={},wsubs={},subs=[],cur=null,seen={},drawn=new Set(),partyDone=false;
 try{const q=new URLSearchParams(location.search).get('add');if(q)sessionStorage.setItem('add',q)}catch(e){}
 
-function show(t,...c){$('#dt').textContent=t;$('#db').replaceChildren(...c.flat());if(!$('#dlg').open)$('#dlg').showModal()}
+function show(t,...c){cur=null;$('#dt').textContent=t;$('#db').replaceChildren(...c.flat().filter(x=>x!=null&&x!==false));if(!$('#dlg').open)$('#dlg').showModal()}
 $('#dx').onclick=()=>$('#dlg').close();
-$('#dlg').addEventListener('close',()=>{if(un){un();un=null}});
+function ask(t,b,yl,fn){show(t,h('p',{},b),h('div',{class:'row'},btn('キャンセル',()=>$('#dlg').close(),'btn s ghost'),btn(yl,()=>{$('#dlg').close();fn()})))}
+const refresh=()=>{render();if($('#dlg').open&&cur)cur()};
 
 function qr(text,px){
   try{const q=qrcode(0,'L');q.addData(text);q.make();const n=q.getModuleCount(),s=Math.max(2,Math.floor(px/(n+8))),m=4*s,c=h('canvas');
@@ -93,17 +127,29 @@ function qr(text,px){
   catch(e){return h('p',{class:'note'},'QRを作れませんでした。下のリンクを送ってください。')}
 }
 function copyBox(v){const i=h('input',{readonly:'',value:v});return h('div',{class:'row'},i,btn('コピー',()=>{i.select();try{navigator.clipboard.writeText(v)}catch(e){}}))}
+const balSVG=(col,lock)=>`<svg viewBox="0 0 40 62" width="46" height="71" aria-hidden="true"><ellipse cx="20" cy="21" rx="16" ry="19" fill="${col}"/><path d="M20 39l-3.5 5h7z" fill="${col}"/><path d="M20 44c-5 6 5 9 0 17" stroke="#9aa" fill="none" stroke-width="1.2"/><ellipse cx="13.5" cy="13" rx="3.5" ry="6" fill="#fff" opacity=".4"/>${lock?'<rect x="15.5" y="18" width="9" height="8" rx="1.5" fill="#fff"/><path d="M17.5 18v-2.5a2.5 2.5 0 015 0V18" stroke="#fff" stroke-width="1.6" fill="none"/>':''}</svg>`;
+function icon(fn,label){const b=h('button',{class:'bal mini','aria-label':label,onclick:fn});b.innerHTML=balSVG(BAL[0],false);return b}
 
 // ---- データ読み込み ----
 const list=(s,k,to)=>Object.entries(s.val()||{}).map(([id,c])=>({...c,id,k,to}));
+function notice(arr,k){
+  const ids=new Set(arr.map(c=>c.id));
+  if(seen[k]){const n=arr.filter(c=>!seen[k].has(c.id));
+    if(n.length){const t=(n[n.length-1].fromNm||'友だち')+'さんからカードが届きました';msg(t);
+      if(document.hidden&&'Notification' in window&&Notification.permission==='granted'){try{new Notification('おたんじょうびカード',{body:t})}catch(e){}}}}
+  seen[k]=ids;
+}
 function start(){
-  const uid=me.uid,on=(path,fn)=>subs.push(onValue(ref(db,path),fn,e=>msg('読み込みエラー：'+e.code)));
+  const uid=me.uid,on=(p,fn)=>subs.push(onValue(ref(db,p),fn,e=>msg('読み込みエラー：'+e.code)));
+  const watch=id=>{if(!wsubs[id])wsubs[id]=onValue(ref(db,'wall/'+id),s=>{walls[id]=list(s,'w',id);if(id===uid)notice(walls[id],'w');refresh()},()=>{})};
   on('friends/'+uid,async s=>{
     friends=(await Promise.all(Object.keys(s.val()||{}).map(async id=>{try{const p=await get(ref(db,'profiles/'+id));return p.exists()?{...p.val(),id}:null}catch(e){return null}}))).filter(okP);
-    render();
+    const ids=new Set([uid,...friends.map(f=>f.id)]);
+    ids.forEach(watch);
+    Object.keys(wsubs).forEach(id=>{if(!ids.has(id)){wsubs[id]();delete wsubs[id];delete walls[id]}});
+    refresh();
   });
-  on('private/'+uid,s=>{priv=list(s,'p',uid);render()});
-  on('wall/'+uid,s=>{wall=list(s,'w',uid);render()});
+  on('private/'+uid,s=>{priv=list(s,'p',uid);notice(priv,'p');refresh()});
   pend();
 }
 async function pend(){
@@ -116,11 +162,26 @@ async function addF(id){
     await set(ref(db,`friends/${me.uid}/${id}`),true);
     await set(ref(db,`friends/${id}/${me.uid}`),true);
     const p=await get(ref(db,'profiles/'+id));if(!p.exists())throw 0;
-    msg('🎉 '+p.val().nm+'さんと友だちになりました！');
+    msg(p.val().nm+'さんと友だちになりました！');
   }catch(e){
     try{await remove(ref(db,`friends/${me.uid}/${id}`));await remove(ref(db,`friends/${id}/${me.uid}`))}catch(_){}
     msg('友だち追加に失敗しました。QRが正しいか、相手が登録済みか確認してね。');
   }
+}
+
+// ---- 通知 ----
+async function enableNotif(){
+  try{
+    if(!('Notification' in window)||!('serviceWorker' in navigator)){msg('この端末・ブラウザは通知に対応していません。');return}
+    if(VAPID.startsWith('ここ')){msg('通知の設定が未完了です（VAPIDキーが未設定）。');return}
+    if(await Notification.requestPermission()!=='granted'){msg('通知が許可されませんでした。ブラウザの設定で許可してね。');return}
+    await navigator.serviceWorker.register('firebase-messaging-sw.js');
+    const reg=await navigator.serviceWorker.ready;
+    const tk=await getToken(getMessaging(app),{vapidKey:VAPID,serviceWorkerRegistration:reg});
+    let dev=localStorage.getItem('dev');if(!dev){dev=rid();localStorage.setItem('dev',dev)}
+    await set(ref(db,`tokens/${me.uid}/${dev}`),tk);
+    localStorage.setItem('notif','1');msg('通知をオンにしました。');render();
+  }catch(e){msg('通知をオンにできませんでした（'+(e.code||e.message||'')+'）')}
 }
 
 // ---- 画面 ----
@@ -138,7 +199,7 @@ function loginBox(){
 function profForm(edit){
   const nm=h('input',{placeholder:'ニックネーム',maxlength:20,value:edit?prof.nm:(me.displayName||'').slice(0,20)}),bm=sel(12),bd=sel(31);
   if(edit){bm.value=prof.m;bd.value=prof.d}
-  return h('div',{class:'box'},h('b',{},edit?'✏ プロフィール編集':'👋 はじめに、自分のプロフィールを登録'),h('div',{class:'row'},nm),h('div',{class:'row'},bm,'月',bd,'日'),
+  return h('div',{class:'box'},h('b',{},edit?'プロフィール編集':'はじめに、自分のプロフィールを登録'),h('div',{class:'row'},nm),h('div',{class:'row'},bm,'月',bd,'日'),
     btn('保存',async()=>{
       const m=+bm.value,d=+bd.value;
       if(new Date(2024,m-1,d).getMonth()!==m-1){msg('その日付は存在しません。');return}
@@ -149,33 +210,76 @@ function profForm(edit){
 }
 function invite(){
   const u=base+'?add='+me.uid;
-  show('📤 友だち招待QR',h('div',{class:'qrb'},qr(u,300)),h('p',{class:'note'},'友だちがスマホのカメラで読み取ると、アプリが開いてすぐ友だちになれます。'),copyBox(u),
+  show('友だち招待QR',h('div',{class:'qrb'},qr(u,300)),h('p',{class:'note'},'友だちがスマホのカメラで読み取ると、アプリが開いてすぐ友だちになれます。'),copyBox(u),
     navigator.share&&btn('LINEなどで送る',()=>navigator.share({title:'おたんじょうびカード',text:'友だちになろう！',url:u}).catch(()=>{}),'btn'));
 }
-function cardEl(c,rec){
-  const me1=nxt(prof),lock=rec&&c.y===me1.y&&me1.dd>0,nmF=String(c.fromNm||'').slice(0,20);
-  const del=(rec||c.from===me.uid)&&h('button',{class:'x2','aria-label':'削除',onclick:()=>remove(ref(db,(c.k==='p'?'private/':'wall/')+c.to+'/'+c.id)).catch(()=>msg('削除できませんでした。'))},'🗑');
-  return lock
-    ?h('div',{class:'mc',style:'background:var(--line);color:var(--fg)'},'🎁 '+nmF+'さんからのカード（誕生日まで開けません）',del)
-    :h('div',{class:'mc',style:'background:'+(COL[c.ci]||COL[0])},(EM.includes(c.em)?c.em:'🎂')+' '+String(c.t||'').slice(0,300),h('div',{class:'fr'},(c.k==='p'?'🔒 ':'')+'— '+nmF),del);
+function bunch(cards,fn){
+  const w=h('div',{class:'bunch'});
+  cards.forEach((c,i)=>{
+    const r=!drawn.has(c.id);drawn.add(c.id);
+    const b=h('button',{class:'bal'+(r?' rise':''),'aria-label':'風船を開く',style:'--d:'+(i*.12)+'s',onclick:()=>fn(c)});
+    b.innerHTML=balSVG(BAL[Math.abs(c.bl|0)%BAL.length],c.k==='p');w.append(b);
+  });
+  return w;
 }
-function inbox(){
-  const all=[...priv,...wall].sort((a,b)=>(b.ts||0)-(a.ts||0));
-  show('💌 届いたカード',all.length?all.map(c=>cardEl(c,true)):h('p',{class:'note'},'まだ届いていません。'));
+function cardEl(c){
+  const b=BG[c.bg]||BG.h3;
+  return h('div',{class:'cv',style:'background:'+b.css+';color:'+b.fg},String(c.t||'').slice(0,300),h('div',{class:'fr'},'— '+String(c.fromNm||'').slice(0,20)+(c.k==='p'?'（非公開）':'')));
+}
+function openCard(c,rec,back){
+  const s=nxt(prof),lock=rec&&c.y===s.y&&s.dd>0;
+  show('カード',lock?h('p',{class:'note'},'誕生日までお楽しみに！当日に開けるようになります。'):cardEl(c),
+    h('div',{class:'row'},btn('戻る',back,'btn s ghost'),
+      (!rec&&c.k==='w'&&c.from===me.uid)&&btn('送ったカードを取り消す',()=>ask('カードの取り消し','自分が送ったカードを取り消します。よろしいですか？','取り消す',async()=>{try{await remove(ref(db,'wall/'+c.to+'/'+c.id))}catch(e){msg('取り消せませんでした。')}back()}),'btn s ghost')));
+}
+function view(f,anim=true){
+  if(anim)drawn.clear();
+  const s=nxt(f),L=(walls[f.id]||[]).filter(c=>c.y===s.y).sort((a,b)=>(a.ts||0)-(b.ts||0));
+  show(f.nm+'さんの風船',
+    h('p',{class:'note'},f.m+'月'+f.d+'日 ・ 風船 '+L.length+'個'),
+    h('p',{class:'note'},L.length?'風船をタップするとカードが読めます。':'まだ風船がありません。'),
+    bunch(L,c=>openCard(c,false,()=>view(f,false))),
+    s.dd<=3?h('div',{class:'bar'},btn('素敵なカードを書く',()=>compose(f),'btn'),btn('風船を送る',e=>sendBalloon(f,e.currentTarget),'btn ghost')):h('p',{class:'note'},'カードや風船は、誕生日の3日前から送れます。'));
+  cur=()=>view(f,false);
+}
+function inbox(anim=true){
+  if(anim)drawn.clear();
+  const L=[...(walls[me.uid]||[]),...priv].sort((a,b)=>(a.ts||0)-(b.ts||0));
+  show('わたしの風船',h('p',{class:'note'},'風船 '+L.length+'個（非公開 '+priv.length+'個を含む）'),
+    h('p',{class:'note'},L.length?'風船をタップするとカードが読めます。届いたカードは消せません。':'まだ届いていません。'),
+    bunch(L,c=>openCard(c,true,()=>inbox(false))));
+  cur=()=>inbox(false);
+}
+async function sendBalloon(f,b){
+  b.disabled=true;
+  try{await push(ref(db,'wall/'+f.id),{from:me.uid,fromNm:prof.nm,t:'お誕生日おめでとう！',bg:'h3',bl:Math.floor(Math.random()*BAL.length),y:nxt(f).y,ts:serverTimestamp()});msg('風船を送りました。')}
+  catch(e){msg('送れませんでした（'+(e.code||'')+'）')}
+  b.disabled=false;
 }
 function compose(f){
-  let ci=0,em=0;
-  const ta=h('textarea',{maxlength:300,placeholder:'お誕生日おめでとう！のメッセージ'}),pri=h('input',{type:'checkbox'}),wl=h('div'),out=h('p',{class:'note'});
-  const pick=(arr,isCol)=>{const w=h('div',{class:'row'});arr.forEach((x,i)=>w.append(h('button',{class:(isCol?'sw':'eb')+(i?'':' on'),style:isCol?'background:'+x:'','aria-label':'選ぶ',onclick:e=>{if(isCol)ci=i;else em=i;w.querySelectorAll('button').forEach(b=>b.classList.remove('on'));e.currentTarget.classList.add('on')}},isCol?'':x)));return w};
-  const send=btn('🎁 カードを送る',async()=>{
-    const t=ta.value.trim();if(!t)return;send.disabled=true;
-    try{await push(ref(db,(pri.checked?'private/':'wall/')+f.id),{from:me.uid,fromNm:prof.nm,t,ci,em:EM[em],y:nxt(f).y,ts:serverTimestamp()});ta.value='';out.textContent='🎉 送りました！'}
+  let bg='c1',bl=0;
+  const ta=h('textarea',{maxlength:300,placeholder:'メッセージを書こう'}),cnt=h('span',{class:'note'},'0/300'),pri=h('input',{type:'checkbox'}),out=h('p',{class:'note'}),pv=h('div',{class:'cv'});
+  const upd=()=>{const b=BG[bg];pv.style.cssText='background:'+b.css+';color:'+b.fg;pv.textContent=ta.value||'ここにプレビューが出ます';cnt.textContent=ta.value.length+'/300'};
+  ta.oninput=upd;
+  const chips=h('div',{class:'row'},['お誕生日おめでとう！','素敵な一年になりますように！','いつもありがとう！','最高の一日を過ごしてね！'].map(t=>btn(t,()=>{ta.value=ta.value?ta.value+'\n'+t:t;upd()},'btn s ghost')));
+  const pk=h('div');
+  CATS.forEach(k=>{
+    pk.append(h('div',{class:'note'},k));const r=h('div',{class:'row'});
+    Object.entries(BG).filter(([,b])=>b.k===k).forEach(([id,b])=>r.append(h('button',{class:'bgb'+(id===bg?' on':''),style:'background:'+b.css,'aria-label':b.n,title:b.n,onclick:e=>{bg=id;pk.querySelectorAll('.bgb').forEach(x=>x.classList.remove('on'));e.currentTarget.classList.add('on');upd()}})));
+    pk.append(r);
+  });
+  const bk=h('div',{class:'row'},BAL.map((c,i)=>h('button',{class:'sw'+(i?'':' on'),style:'background:'+c,'aria-label':'風船の色',onclick:e=>{bl=i;bk.querySelectorAll('.sw').forEach(x=>x.classList.remove('on'));e.currentTarget.classList.add('on')}})));
+  upd();
+  const send=btn('風船を飛ばす',async()=>{
+    const t=ta.value.trim();if(!t){out.textContent='メッセージを書いてね。';return}
+    send.disabled=true;
+    try{await push(ref(db,(pri.checked?'private/':'wall/')+f.id),{from:me.uid,fromNm:prof.nm,t,bg,bl,y:nxt(f).y,ts:serverTimestamp()});ta.value='';upd();out.textContent=pri.checked?'非公開カードを送りました。':'風船を飛ばしました！'}
     catch(e){out.textContent='送れませんでした（'+(e.code||'')+'）'}
     send.disabled=false;
   },'btn');
-  show(f.nm+'さんへ',ta,pick(COL,true),pick(EM,false),h('label',{class:'row'},pri,'🔒 非公開（'+f.nm+'さんだけに届く）'),h('p',{class:'note'},'チェックなしだと、'+f.nm+'さんの友だちにも見える公開カードになります。'),send,out,h('h2',{},'公開カード'),wl);
-  if(un)un();
-  un=onValue(ref(db,'wall/'+f.id),s=>{const L=list(s,'w',f.id).sort((a,b)=>(b.ts||0)-(a.ts||0));wl.replaceChildren(...(L.length?L.map(c=>cardEl(c,false)):[h('p',{class:'note'},'まだ公開カードはありません。')]))},()=>{});
+  show(f.nm+'さんへのカード',pv,ta,cnt,chips,h('b',{},'背景'),pk,h('b',{},'風船の色'),bk,
+    h('label',{class:'row'},pri,'非公開（'+f.nm+'さんだけに届く）'),h('p',{class:'note'},'チェックなしの公開カードは、'+f.nm+'さんの友だちにも見えます。'),
+    send,out,btn('戻る',()=>view(f,false),'btn s ghost'));
 }
 async function dl(){
   try{
@@ -183,29 +287,46 @@ async function dl(){
     const a=h('a',{href:URL.createObjectURL(await r.blob()),download:'birthday-cards.html'});document.body.append(a);a.click();a.remove();
   }catch(e){msg('ここでは保存できません。公開したURLで開いて試してね。')}
 }
+function party(){
+  const w=h('div',{id:'pt'});
+  for(let i=0;i<36;i++)w.append(h('span',{style:`left:${Math.random()*92}%;font-size:${22+Math.random()*34}px;--y:${-(45+Math.random()*50)}vh;--x:${(Math.random()-.5)*80}px;animation-delay:${Math.random()*1.6}s`},'🎉'));
+  document.body.append(w);setTimeout(()=>w.remove(),7000);
+}
 
 function render(){
   const A=$('#app');A.replaceChildren();
   if(!me){A.append(loginBox());return}
   if(!prof){A.append(profForm(false));return}
-  const all=[{...prof,id:me.uid,me:1},...friends].map(p=>({...p,...nxt(p)})).sort((a,b)=>a.dd-b.dd),td=all.filter(p=>p.dd===0);
-  if(td.length)A.append(h('div',{id:'ban'},'🎉 今日は '+td.map(p=>p.me?'あなた':p.nm+'さん').join('、')+' の誕生日！'));
-  A.append(h('div',{class:'row'},btn('📤 友だち招待QR',invite,'btn'),btn('💌 届いたカード'+(priv.length+wall.length?'（'+(priv.length+wall.length)+'）':''),inbox,'btn')));
-  A.append(h('h2',{},'もうすぐ誕生日'));
-  if(all.length===1)A.append(h('p',{class:'note'},'まだ友だちがいません。「友だち招待QR」を見せて、読み取ってもらおう！'));
-  all.forEach(p=>A.append(h('div',{class:'row2'},
-    h('div',{class:'g'},h('b',{},p.nm+(p.me?'（自分）':'')),h('div',{class:'note'},p.m+'月'+p.d+'日 ・ '+(p.dd===0?'🎉 今日！':'あと'+p.dd+'日'))),
-    p.me?btn('編集',()=>show('プロフィール',profForm(true))):btn('カードを書く',()=>compose(p)),
-    !p.me&&h('button',{class:'x2','aria-label':'友だち削除',onclick:async()=>{try{await remove(ref(db,`friends/${me.uid}/${p.id}`));await remove(ref(db,`friends/${p.id}/${me.uid}`))}catch(e){msg('削除できませんでした。')}}},'✕'))));
-  A.append(h('div',{class:'box'},h('b',{},'📲 アプリとして使う'),
-    h('div',{class:'row'},btn('⬇ アプリ（HTML）を保存',dl),btn('ログアウト',()=>signOut(auth))),
+  const my=nxt(prof),fl=friends.map(p=>({...p,...nxt(p)})).sort((a,b)=>a.dd-b.dd),td=[...(my.dd===0?['あなた']:[]),...fl.filter(p=>p.dd===0).map(p=>p.nm+'さん')];
+  if(my.dd===0&&!partyDone){partyDone=true;party()}
+  if(td.length)A.append(h('div',{id:'ban'},'今日は '+td.join('、')+' の誕生日！'));
+  A.append(h('div',{class:'box mine'},icon(()=>inbox(),'わたしの風船'),
+    h('div',{class:'g'},h('b',{},prof.nm),h('div',{class:'note'},prof.m+'月'+prof.d+'日 ・ '+(my.dd===0?'今日が誕生日！':'あと'+my.dd+'日')),h('div',{},'届いた風船 '+((walls[me.uid]||[]).length+priv.length)+'個')),
+    btn('風船を見る',()=>inbox()),btn('編集',()=>show('プロフィール編集',profForm(true)))));
+  A.append(h('div',{class:'row'},btn('友だち招待QR',invite,'btn')));
+  A.append(h('h2',{},'友だちの誕生日'));
+  if(!fl.length)A.append(h('p',{class:'note'},'まだ友だちがいません。「友だち招待QR」を見せて読み取ってもらおう！'));
+  fl.forEach(p=>{
+    const n=(walls[p.id]||[]).filter(c=>c.y===p.y).length;
+    A.append(h('div',{class:'row2'},icon(()=>view(p),p.nm+'さんの風船'),
+      h('div',{class:'g'},h('b',{},p.nm),h('div',{class:'note'},p.m+'月'+p.d+'日 ・ '+(p.dd===0?'今日！':'あと'+p.dd+'日')),h('div',{class:'note'},'風船 '+n+'個')),
+      p.dd<=3&&btn('✉ カード',()=>view(p)),
+      h('button',{class:'x2',onclick:()=>ask('友だちを解除','「'+p.nm+'」さんとの友だちを解除します。お互いの誕生日と風船が見えなくなります。よろしいですか？','解除する',async()=>{try{await remove(ref(db,`friends/${me.uid}/${p.id}`));await remove(ref(db,`friends/${p.id}/${me.uid}`))}catch(e){msg('解除できませんでした。')}})},'解除')));
+  });
+  A.append(h('div',{class:'box'},h('b',{},'通知'),
+    h('p',{class:'note'},'カードが届いたときや、自分・友だちの誕生日に通知します。iPhoneは「ホーム画面に追加」したアプリから設定してね。'),
+    btn(notifOn()?'通知はオン':'通知をオンにする',enableNotif)));
+  A.append(h('div',{class:'box'},h('b',{},'アプリとして使う'),
+    h('div',{class:'row'},btn('アプリ（HTML）を保存',dl),btn('ログアウト',async()=>{try{const d=localStorage.getItem('dev');if(d)await remove(ref(db,`tokens/${me.uid}/${d}`));localStorage.removeItem('notif')}catch(e){}signOut(auth)})),
     h('details',{},h('summary',{},'ホーム画面に追加する方法'),
       h('p',{},'iPhone（Safari）：共有ボタン →「ホーム画面に追加」'),
       h('p',{},'Android（Chrome）：右上のメニュー →「ホーム画面に追加」または「アプリをインストール」'))));
+  if(my.dd===0)A.append(h('div',{class:'creator'},h('b',{},'製作者より'),h('div',{},'お誕生日おめでとうございます！素敵な1年に✨')));
 }
 
 onAuthStateChanged(auth,async u=>{
-  subs.forEach(f=>f());subs=[];me=u;prof=null;friends=[];priv=[];wall=[];
+  subs.forEach(f=>f());subs=[];Object.values(wsubs).forEach(f=>f());wsubs={};walls={};seen={};
+  me=u;prof=null;friends=[];priv=[];
   if(u){
     try{const s=await get(ref(db,'profiles/'+u.uid));prof=s.exists()?s.val():null}
     catch(e){msg('データを読み込めませんでした（'+(e.code||'')+'）。Firebaseのルール設定を確認してね。')}
