@@ -1,0 +1,51 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "profiles": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('friends').child($uid).child(auth.uid).exists())",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['nm','m','d'])",
+        "nm": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 20" },
+        "m": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 12" },
+        "d": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 31" }
+      }
+    },
+    "friends": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$fid": {
+          ".write": "auth != null && (auth.uid === $uid || auth.uid === $fid)",
+          ".validate": "newData.val() === true"
+        }
+      }
+    },
+    "tokens": {
+      "$uid": {
+        "$dev": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.isString() && newData.val().length < 500"
+        }
+      }
+    },
+    "private": {
+      "$to": {
+        ".read": "auth != null && auth.uid === $to",
+        "$id": {
+          ".write": "auth != null && !data.exists() && root.child('friends').child($to).child(auth.uid).exists()",
+          ".validate": "newData.hasChildren(['from','fromNm','t','bg','bl','y','ts']) && newData.child('from').val() === auth.uid && newData.child('fromNm').val() === root.child('profiles').child(auth.uid).child('nm').val() && newData.child('t').isString() && newData.child('t').val().length <= 300 && newData.child('bg').isString() && newData.child('bg').val().length <= 3 && newData.child('bl').isNumber()"
+        }
+      }
+    },
+    "wall": {
+      "$to": {
+        ".read": "auth != null && (auth.uid === $to || root.child('friends').child($to).child(auth.uid).exists())",
+        "$id": {
+          ".write": "auth != null && ((data.exists() && data.child('from').val() === auth.uid) || (!data.exists() && root.child('friends').child($to).child(auth.uid).exists()))",
+          ".validate": "newData.hasChildren(['from','fromNm','t','bg','bl','y','ts']) && newData.child('from').val() === auth.uid && newData.child('fromNm').val() === root.child('profiles').child(auth.uid).child('nm').val() && newData.child('t').isString() && newData.child('t').val().length <= 300 && newData.child('bg').isString() && newData.child('bg').val().length <= 3 && newData.child('bl').isNumber()"
+        }
+      }
+    }
+  }
+}
