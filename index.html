@@ -278,7 +278,7 @@ function mailBox(){
   return h('div',{},h('div',{class:'row'},em),h('label',{class:'row'},on,'メールで通知する'),
     btn('保存',async()=>{const v=em.value.trim();
       if(on.checked&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){out.textContent='メールアドレスを正しく入力してね。';return}
-      try{await set(ref(db,'notify/'+me.uid),{em:v,on:on.checked});out.textContent='保存しました。'}catch(e){out.textContent='保存できませんでした（'+(e.code||'')+'）'}},'btn s'),out);
+      try{await set(ref(db,'notify/'+me.uid),{em:v,on:on.checked});out.textContent=on.checked?'保存しました。確認メールを送ります。届かないときは迷惑メールも見てね。':'保存しました。'}catch(e){out.textContent='保存できませんでした（'+(e.code||'')+'）'}},'btn s'),out);
 }
 
 // ---- 画面 ----

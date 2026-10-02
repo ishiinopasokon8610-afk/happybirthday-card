@@ -8,13 +8,16 @@
         ".write": "auth != null && auth.uid === $uid",
         ".validate": "newData.hasChildren(['nm','m','d'])",
         "nm": {
-          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 20 && newData.val().matches(/^[^ 　]+$/)"
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 20"
         },
         "m": {
           ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 12"
         },
         "d": {
           ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 31"
+        },
+        "$other": {
+          ".validate": false
         }
       }
     },
@@ -40,9 +43,15 @@
         ".read": "auth != null && auth.uid === $uid",
         ".write": "auth != null && auth.uid === $uid",
         ".validate": "newData.hasChildren(['em','on'])",
-        "em": { ".validate": "newData.isString() && newData.val().length <= 100" },
-        "on": { ".validate": "newData.isBoolean()" },
-        "$other": { ".validate": false }
+        "em": {
+          ".validate": "newData.isString() && newData.val().length <= 100"
+        },
+        "on": {
+          ".validate": "newData.isBoolean()"
+        },
+        "$other": {
+          ".validate": false
+        }
       }
     },
     "private": {
@@ -50,7 +59,7 @@
         ".read": "auth != null && auth.uid === $to",
         "$id": {
           ".write": "auth != null && ((!data.exists() && root.child('friends').child($to).child(auth.uid).exists()) || (data.exists() && !newData.exists() && data.child('from').val() === auth.uid && now - data.child('ts').val() < 60000))",
-          ".validate": "newData.hasChildren(['from','fromNm','bg','bl','y','ts','ot']) && newData.child('from').val() === auth.uid && newData.child('fromNm').val() === root.child('profiles').child(auth.uid).child('nm').val() && newData.child('ot').val() >= now - 86400000",
+          ".validate": "newData.hasChildren(['from','fromNm','bg','bl','y','ts','ot']) && newData.child('from').val() === auth.uid && newData.child('fromNm').val() === root.child('profiles').child(auth.uid).child('nm').val() && newData.child('ot').val() >= now - 86400000 && newData.child('ot').val() <= now + 691200000",
           "from": {
             ".validate": "newData.isString()"
           },
@@ -67,7 +76,7 @@
             ".validate": "newData.isNumber()"
           },
           "ts": {
-            ".validate": "newData.isNumber()"
+            ".validate": "newData.isNumber() && newData.val() === now"
           },
           "ot": {
             ".validate": "newData.isNumber()"
@@ -83,7 +92,7 @@
         ".read": "auth != null && (auth.uid === $to || root.child('friends').child($to).child(auth.uid).exists())",
         "$id": {
           ".write": "auth != null && ((data.exists() && !newData.exists() && data.child('from').val() === auth.uid) || (!data.exists() && root.child('friends').child($to).child(auth.uid).exists()))",
-          ".validate": "newData.hasChildren(['from','fromNm','bg','bl','y','ts','ot']) && newData.child('from').val() === auth.uid && newData.child('fromNm').val() === root.child('profiles').child(auth.uid).child('nm').val() && newData.child('ot').val() >= now - 86400000",
+          ".validate": "newData.hasChildren(['from','fromNm','bg','bl','y','ts','ot']) && newData.child('from').val() === auth.uid && newData.child('fromNm').val() === root.child('profiles').child(auth.uid).child('nm').val() && newData.child('ot').val() >= now - 86400000 && newData.child('ot').val() <= now + 691200000",
           "from": {
             ".validate": "newData.isString()"
           },
@@ -100,7 +109,7 @@
             ".validate": "newData.isNumber()"
           },
           "ts": {
-            ".validate": "newData.isNumber()"
+            ".validate": "newData.isNumber() && newData.val() === now"
           },
           "ot": {
             ".validate": "newData.isNumber()"

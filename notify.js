@@ -2,7 +2,7 @@
 //   Object.assign(exports, require('./notify'));
 // を1行足す。 cd functions && npm i nodemailer
 // firebase functions:secrets:set SMTP_USER / SMTP_PASS（Gmailのアプリパスワード）
-const {onValueCreated}=require('firebase-functions/v2/database');
+const {onValueCreated,onValueWritten}=require('firebase-functions/v2/database');
 const {onSchedule}=require('firebase-functions/v2/scheduler');
 const {defineSecret}=require('firebase-functions/params');
 const admin=require('firebase-admin');
@@ -59,4 +59,19 @@ exports.birthdayDaily=onSchedule({schedule:'0 8 * * *',timeZone:'Asia/Tokyo',reg
     for(const f of Object.keys((await db().ref('friends/'+uid).get()).val()||{}))
       await notify(f,`🎂 今日は${p.nm}さんの誕生日`,`${p.nm}さんの誕生日です。お祝いのカードを送ろう！`);
   }
+});
+
+// ③ メール通知を登録したとき（アドレスの変更、またはオフ→オン）に確認メールを送る
+//    同じアドレスへは1時間に1通まで（連打防止）。記録は mailLog/{uid}（クライアントからは読み書き不可）
+exports.onNotifySaved=onValueWritten({...OPT,ref:'/notify/{uid}'},async ev=>{
+  const b=ev.data.before.val(),a=ev.data.after.val();
+  if(!a||!a.on||!a.em)return;
+  if(b&&b.on&&b.em===a.em)return;
+  const uid=ev.params.uid,log=db().ref('mailLog/'+uid),old=(await log.get()).val();
+  if(old&&old.em===a.em&&Date.now()-old.ts<3600e3)return;
+  await log.set({em:a.em,ts:Date.now()});
+  const text=`メール通知の登録ありがとう！\n\nこのアドレスに、次のときにお知らせします。\n・カードが届いたとき\n・自分や友だちの誕生日の朝\n\nメールが不要になったら、アプリの「メールでお知らせ」のチェックを外して保存してください。\n\n心当たりがない場合は、このメールは無視してください。`;
+  const html=`<p>メール通知の登録ありがとう！🎈</p><p>このアドレスに、次のときにお知らせします。</p><ul><li>カードが届いたとき</li><li>自分や友だちの誕生日の朝</li></ul><p>メールが不要になったら、アプリの「メールでお知らせ」のチェックを外して保存してください。</p><p style="color:#888;font-size:12px">心当たりがない場合は、このメールは無視してください。</p><p><a href="${SITE}">${SITE}</a></p>`;
+  try{await mail(a.em,'【おたんじょうびカード】メール通知を登録しました',text+'\n\n'+SITE,html)}
+  catch(e){console.error('confirm mail',uid,e)}
 });
