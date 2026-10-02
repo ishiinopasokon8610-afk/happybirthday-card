@@ -122,6 +122,11 @@ dialog[open]{animation:dlgin .4s cubic-bezier(.2,1.3,.4,1)}dialog[open]::backdro
 @font-face{font-family:"F_hgrtw085";src:url("fonts/hgrtw085.woff2") format("woff2");font-display:swap}
 @font-face{font-family:"F_hgrtw095";src:url("fonts/hgrtw095.woff2") format("woff2");font-display:swap}
 @font-face{font-family:"F_hgrtw100";src:url("fonts/hgrtw100.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"F_zenmaru";font-weight:300;src:url("fonts/zenmaru-light.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"F_zenmaru";font-weight:400;src:url("fonts/zenmaru-regular.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"F_zenmaru";font-weight:500;src:url("fonts/zenmaru-medium.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"F_zenmaru";font-weight:700;src:url("fonts/zenmaru-bold.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"F_zenmaru";font-weight:900;src:url("fonts/zenmaru-black.woff2") format("woff2");font-display:swap}
 .gbc{position:absolute;top:-6px;right:-6px;background:var(--acc);color:#fff;border-radius:999px;font-size:12px;font-weight:700;padding:1px 7px}
 </style>
 </head>
@@ -167,7 +172,7 @@ const ENV=`<svg viewBox="0 0 300 300" aria-hidden="true"><rect x="0" y="120" wid
 const base=location.href.split(/[?#]/)[0];
 const msg=t=>{$('#toast').textContent=t||''};
 const rid=()=>Math.random().toString(36).slice(2,12);
-const FONTS={std:{n:'標準',ff:'"Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif'},mu:{n:'無心',ff:'"F_mushin","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},nm:{n:'HG NewゴシックM',ff:'"F_hgnewm","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},mp:{n:'HG創英丸ポップ体',ff:'"F_hgmaru","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},rs:{n:'HG創英隷書体',ff:'"F_hgreisho","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},dt:{n:'HGドットNewゴシック',ff:'"F_hgdot","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},r60:{n:'HG NewゴシックRTW 60',ff:'"F_hgrtw060","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},r75:{n:'HG NewゴシックRTW 75',ff:'"F_hgrtw075","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},r85:{n:'HG NewゴシックRTW 85',ff:'"F_hgrtw085","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},r95:{n:'HG NewゴシックRTW 95',ff:'"F_hgrtw095","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},r100:{n:'HG NewゴシックRTW 100',ff:'"F_hgrtw100","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'}};
+const FONTS={std:{n:'標準',ff:'"Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif'},mu:{n:'無心',ff:'"F_mushin","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},nm:{n:'HG NewゴシックM',ff:'"F_hgnewm","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},mp:{n:'HG創英丸ポップ体',ff:'"F_hgmaru","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},rs:{n:'HG創英隷書体',ff:'"F_hgreisho","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},dt:{n:'HGドットNewゴシック',ff:'"F_hgdot","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},r60:{n:'HG NewゴシックRTW 60',ff:'"F_hgrtw060","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},r75:{n:'HG NewゴシックRTW 75',ff:'"F_hgrtw075","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},r85:{n:'HG NewゴシックRTW 85',ff:'"F_hgrtw085","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},r95:{n:'HG NewゴシックRTW 95',ff:'"F_hgrtw095","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},r100:{n:'HG NewゴシックRTW 100',ff:'"F_hgrtw100","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},zm:{n:'Zen丸ゴシック',ff:'"F_zenmaru","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'}};
 function setFont(k){const f=FONTS[k]||FONTS.std;document.documentElement.style.setProperty('--ff',f.ff);if(f.g&&!document.getElementById('gf'+k))document.head.append(h('link',{id:'gf'+k,rel:'stylesheet',href:'https://fonts.googleapis.com/css2?family='+f.g+'&display=swap'}));try{localStorage.setItem('font',k)}catch(e){}}
 const curFont=()=>{try{return localStorage.getItem('font')||'std'}catch(e){return 'std'}};
 setFont(curFont());
@@ -562,7 +567,7 @@ function render(){
     btn(notifOn()?'通知はオン':'通知をオンにする',enableNotif)));
   A.append(h('div',{class:'box'},h('b',{},'メールでお知らせ'),h('p',{class:'note'},'①カードが届いたとき ②自分や友だちの誕生日の朝（自分の分は、届いたメッセージの内容つき）にメールします。端末の通知が使えない人もこちらで受け取れます。'),mailEl||(mailEl=mailBox())));
   A.append(h('div',{class:'box'},h('b',{},'アプリとして使う'),
-    h('div',{class:'row'},btn('アプリ（HTML）を保存',dl),btn('ログアウト',async()=>{try{const d=localStorage.getItem('dev');if(d)await remove(ref(db,`tokens/${me.uid}/${d}`));localStorage.removeItem('notif')}catch(e){}setKnown(false);signOut(auth)})),
+    h('div',{class:'row'},btn('ログアウト',async()=>{try{const d=localStorage.getItem('dev');if(d)await remove(ref(db,`tokens/${me.uid}/${d}`));localStorage.removeItem('notif')}catch(e){}setKnown(false);signOut(auth)})),
     h('details',{},h('summary',{},'ホーム画面に追加する方法'),
       h('p',{},'iPhone（Safari）：共有ボタン →「ホーム画面に追加」'),
       h('p',{},'Android（Chrome）：右上のメニュー →「ホーム画面に追加」または「アプリをインストール」'))));
