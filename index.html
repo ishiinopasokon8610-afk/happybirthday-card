@@ -136,7 +136,7 @@ const btn=(l,f,c='btn s')=>h('button',{class:c,onclick:f},l);
 const okP=p=>p&&p.m>=1&&p.m<=12&&p.d>=1&&p.d<=31;
 const notifOn=()=>{try{return localStorage.getItem('notif')==='1'&&Notification.permission==='granted'}catch(e){return false}};
 
-let me=null,prof=null,friends=[],priv=[],walls={},wsubs={},subs=[],cur=null,seen={},drawn=new Set(),partyDone=false,loading=true,slow=false,loadErr=false,started=false;
+let me=null,prof=null,friends=[],priv=[],walls={},cnt={},wsubs={},subs=[],cur=null,seen={},drawn=new Set(),partyDone=false,loading=true,slow=false,loadErr=false,started=false;
 try{const q=new URLSearchParams(location.search).get('add');if(q)sessionStorage.setItem('add',q)}catch(e){}
 
 function show(t,...c){cur=null;$('#dt').textContent=t;$('#db').replaceChildren(...c.flat().filter(x=>x!=null&&x!==false));if(!$('#dlg').open)$('#dlg').showModal()}
@@ -167,7 +167,14 @@ function notice(arr,k){
 }
 function start(){
   const uid=me.uid,on=(p,fn)=>subs.push(onValue(ref(db,p),fn,e=>msg('読み込みエラー：'+e.code)));
-  const watch=id=>{if(!wsubs[id])wsubs[id]=onValue(ref(db,'wall/'+id),s=>{walls[id]=list(s,'w',id);if(id===uid)notice(walls[id],'w');refresh()},()=>{})};
+  const watch=id=>{
+    if(wsubs[id])return;
+    const pr=id===uid?prof:friends.find(f=>f.id===id),y=pr?nxt(pr).y:null,no=()=>{};
+    const u1=onValue(ref(db,'wall/'+id),s=>{walls[id]=list(s,'w',id);if(id===uid)notice(walls[id],'w');refresh()},no);
+    const u2=y!=null?onValue(ref(db,`balloons/${id}/${y}/w`),s=>{cnt[id+'w']=s.val();refresh()},no):no;
+    const u3=y!=null&&id===uid?onValue(ref(db,`balloons/${id}/${y}/p`),s=>{cnt[id+'p']=s.val();refresh()},no):no;
+    wsubs[id]=()=>{u1();u2();u3()};
+  };
   on('friends/'+uid,async s=>{
     friends=(await Promise.all(Object.keys(s.val()||{}).map(async id=>{try{const p=await get(ref(db,'profiles/'+id));return p.exists()?{...p.val(),id}:null}catch(e){return null}}))).filter(okP);
     const ids=new Set([uid,...friends.map(f=>f.id)]);
@@ -406,13 +413,13 @@ function render(){
   if(my.dd===0&&!partyDone){partyDone=true;party()}
   if(td.length)A.append(h('div',{id:'ban'},'今日は '+td.join('、')+' の誕生日！'));
   A.append(h('div',{class:'box mine'},icon(()=>inbox(),'わたしのカード'),
-    h('div',{class:'g'},h('b',{},prof.nm),h('div',{class:'note'},prof.m+'月'+prof.d+'日 ・ '+(my.dd===0?'今日が誕生日！':'あと'+my.dd+'日')),h('div',{},'届いたカード '+((walls[me.uid]||[]).length+priv.length)+'枚')),
+    h('div',{class:'g'},h('b',{},prof.nm),h('div',{class:'note'},prof.m+'月'+prof.d+'日 ・ '+(my.dd===0?'今日が誕生日！':'あと'+my.dd+'日')),h('div',{},'届いたカード '+(cnt[me.uid+'w']!=null?cnt[me.uid+'w']+(cnt[me.uid+'p']||0):(walls[me.uid]||[]).length+priv.length)+'枚')),
     btn('✉ カード',()=>inbox()),btn('編集',()=>show('プロフィール編集',profForm(true)))));
   A.append(h('div',{class:'row'},btn('友だち招待QR',invite,'btn')));
   A.append(h('h2',{},'友だちの誕生日'));
   if(!fl.length)A.append(h('p',{class:'note'},'まだ友だちがいません。「友だち招待QR」を見せて読み取ってもらおう！'));
   fl.forEach(p=>{
-    const n=(walls[p.id]||[]).filter(c=>c.y===p.y).length;
+    const n=cnt[p.id+'w']!=null?cnt[p.id+'w']:(walls[p.id]||[]).filter(c=>c.y===p.y).length;
     A.append(h('div',{class:'row2'},icon(()=>view(p),p.nm+'さんの風船'),
       h('div',{class:'g'},h('b',{},p.nm),h('div',{class:'note'},p.m+'月'+p.d+'日 ・ '+(p.dd===0?'今日！':'あと'+p.dd+'日')),h('div',{class:'note'},'風船 '+n+'個')),
       p.dd<=3&&btn('✉ カード',()=>compose(p)),p.dd<=3&&btn('🎈 風船',e=>sendBalloon(p,e.currentTarget)),
@@ -442,7 +449,7 @@ async function loadProfile(u){
   loading=false;render();
 }
 onAuthStateChanged(auth,u=>{
-  subs.forEach(f=>f());subs=[];Object.values(wsubs).forEach(f=>f());wsubs={};walls={};seen={};
+  subs.forEach(f=>f());subs=[];Object.values(wsubs).forEach(f=>f());wsubs={};walls={};cnt={};seen={};
   me=u;prof=null;friends=[];priv=[];started=false;loadErr=false;
   if(!u){loading=lineBusy;render();return}
   setKnown(true);
