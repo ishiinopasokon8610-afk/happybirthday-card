@@ -132,6 +132,8 @@ dialog[open]{animation:dlgin .4s cubic-bezier(.2,1.3,.4,1)}dialog[open]::backdro
 #wb{position:fixed;right:calc(96px + env(safe-area-inset-right,0px));bottom:calc(26px + env(safe-area-inset-bottom,0px));z-index:65;height:52px;padding:0 1.3em;white-space:nowrap;box-shadow:0 4px 14px #0004}
 #cl{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
 .bl{display:inline-flex;align-items:center;gap:8px}.bi{display:inline-flex;align-items:center;justify-content:center;flex:none;width:26px;height:26px;border-radius:50%;background:#fff}.bi svg{width:18px;height:18px;display:block}.bi.ln{border-radius:7px}.bi.ln svg,.bi.ln img{width:26px;height:26px;display:block;border-radius:6px;object-fit:cover}
+.paper{position:relative}
+.cm{position:absolute;top:4px;right:6px;background:none;border:0;padding:6px 8px;color:inherit;opacity:.75;cursor:pointer;line-height:0}.cm svg{width:22px;height:22px;display:block}
 .bd0{font-weight:700;color:var(--acc2);font-size:15px}
 .sts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}.sts>div{background:var(--tint);border-radius:12px;padding:8px 10px;text-align:center}.sts b{display:block;font-size:24px;line-height:1.3;color:var(--acc2)}.sts small{color:var(--sub);font-size:12px}
 .gbc{position:absolute;top:-6px;right:-6px;background:var(--acc);color:#fff;border-radius:999px;font-size:12px;font-weight:700;padding:1px 7px}
@@ -161,7 +163,7 @@ a.btn{display:inline-block;text-decoration:none;text-align:center}
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,onAuthStateChanged,signOut,signInWithCustomToken,getAdditionalUserInfo,signInAnonymously,getRedirectResult} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import {getFunctions,httpsCallable} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-functions.js";
-import {getDatabase,ref,get,set,push,remove,onValue,serverTimestamp,runTransaction} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import {getDatabase,ref,get,set,push,remove,onValue,serverTimestamp,runTransaction,query,orderByChild,equalTo} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 
 // Firebaseコンソール → プロジェクトの設定 → Cloud Messaging → ウェブ プッシュ証明書 で作ったキーペアの「公開キー」を貼る
@@ -208,7 +210,7 @@ const btn=(l,f,c='btn s')=>h('button',{class:c,onclick:f},l);
 const okP=p=>p&&p.m>=1&&p.m<=12&&p.d>=1&&p.d<=31;
 const notifOn=()=>{try{return localStorage.getItem('notif')==='1'&&Notification.permission==='granted'}catch(e){return false}};
 
-let banKey='',banOff=false,banT=null,stats={},statsEl=null,me=null,prof=null,friends=[],priv=[],walls={},cnt={},wsubs={},subs=[],cur=null,seen={},drawn=new Set(),partyDone=false,loading=true,slow=false,loadErr=false,started=false,hint=null,hintBusy=false,xferUn=null,nameOnly=false;
+let sentPriv={},banKey='',banOff=false,banT=null,stats={},statsEl=null,me=null,prof=null,friends=[],priv=[],walls={},cnt={},wsubs={},subs=[],cur=null,seen={},drawn=new Set(),partyDone=false,loading=true,slow=false,loadErr=false,started=false,hint=null,hintBusy=false,xferUn=null,nameOnly=false;
 try{const q=new URLSearchParams(location.search).get('add');if(q)sessionStorage.setItem('add',q)}catch(e){}
 
 function show(t,...c){cur=null;$('#dt').textContent=t;$('#db').replaceChildren(...c.flat().filter(x=>x!=null&&x!==false));if(!$('#dlg').open)$('#dlg').showModal()}
@@ -252,7 +254,8 @@ function start(){
     const u1=onValue(ref(db,'wall/'+id),s=>{walls[id]=list(s,'w',id);if(id===uid)notice(walls[id],'w');refresh()},e=>{if(id===uid)msg('カードの読み込みエラー：'+(e.code||''))});
     const u2=onValue(ref(db,`balloons/${id}/${y}/w`),s=>{cnt[id+'w']=s.val();refresh()},no);
     const u3=id===uid?onValue(ref(db,`balloons/${id}/${y}/p`),s=>{cnt[id+'p']=s.val();refresh()},no):no;
-    wsubs[id]=()=>{u1();u2();u3()};
+    const u4=id===uid?no:onValue(query(ref(db,'private/'+id),orderByChild('from'),equalTo(uid)),s=>{sentPriv[id]=list(s,'p',id);refresh()},no);
+    wsubs[id]=()=>{u1();u2();u3();u4()};
   };
   // 友だちのプロフィール（名前・誕生日の変更もすぐ反映）
   const subProf=id=>{
@@ -278,7 +281,7 @@ function start(){
     fids=new Set(Object.keys(s.val()||{}));
     fids.forEach(id=>{if(!ps[id])subProf(id)});
     Object.keys(ps).forEach(id=>{if(!fids.has(id)){ps[id]();delete ps[id];delete pm[id]}});
-    Object.keys(wsubs).forEach(id=>{if(id!==uid&&!fids.has(id)){wsubs[id]();delete wsubs[id];delete walls[id];delete wy[id]}});
+    Object.keys(wsubs).forEach(id=>{if(id!==uid&&!fids.has(id)){wsubs[id]();delete wsubs[id];delete walls[id];delete sentPriv[id];delete wy[id]}});
     rebuild();refresh();
   });
   on('private/'+uid,s=>{priv=list(s,'p',uid);notice(priv,'p');refresh()});
@@ -342,12 +345,16 @@ function askNotifOnce(next){
     h('div',{class:'row'},btn('あとで',()=>{$('#dlg').close();go()},'btn s ghost'),btn('通知をオンにする',async()=>{$('#dlg').close();await enableNotif();go()},'btn')));
 }
 function mailBox(){
-  const em=h('input',{type:'email',placeholder:'メールアドレス',maxlength:100,value:me.email||'',style:'flex:1;min-width:0'}),on=h('input',{type:'checkbox'}),out=h('p',{class:'note'});
-  get(ref(db,'notify/'+me.uid)).then(x=>{const v=x.val();if(v){em.value=v.em||em.value;on.checked=!!v.on}}).catch(()=>{});
-  return h('div',{},h('div',{class:'row'},em),h('label',{class:'row'},on,'メールで通知する'),
+  const MAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const em=h('input',{type:'email',placeholder:'メールアドレス',maxlength:100,value:me.email||'',style:'flex:1;min-width:0'}),out=h('p',{class:'note'});
+  get(ref(db,'notify/'+me.uid)).then(x=>{const v=x.val();if(v){em.value=v.em||em.value;
+    // 以前に通知をオフにしていた人も、必ずオンにする
+    if(v.on!==true&&MAIL_RE.test(v.em||''))set(ref(db,'notify/'+me.uid),{em:v.em,on:true,ts:Date.now()}).catch(()=>{})}}).catch(()=>{});
+  return h('div',{},h('div',{class:'row'},em),
+    h('p',{class:'note'},'メールでのお知らせは、常にオンです。メールアドレスは必ず入れてね。'),
     btn('保存',async()=>{const v=em.value.trim();
-      if(on.checked&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){out.textContent='メールアドレスを正しく入力してね。';return}
-      try{await set(ref(db,'notify/'+me.uid),{em:v,on:on.checked,ts:Date.now()});out.textContent=on.checked?'保存しました。確認メールを送ります（1分ほどかかることがあります）。届かないときは迷惑メールも見てね。':'保存しました。'}catch(e){out.textContent='保存できませんでした（'+(e.code||'')+'）'}},'btn s'),out);
+      if(!MAIL_RE.test(v)){out.textContent='メールアドレスを正しく入力してね。';return}
+      try{await set(ref(db,'notify/'+me.uid),{em:v,on:true,ts:Date.now()});out.textContent='保存しました。確認メールを送ります（1分ほどかかることがあります）。届かないときは迷惑メールも見てね。'}catch(e){out.textContent='保存できませんでした（'+(e.code||'')+'）'}},'btn s'),out);
 }
 
 // ---- 詳細設定（メール・引っ越し・ライセンス） ----
@@ -360,7 +367,7 @@ async function doLogout(){try{const d=localStorage.getItem('dev');if(d)await rem
 function cntAll(){
   const rec=[...(walls[me.uid]||[]),...priv];let sb=0,sc=0;
   Object.keys(walls).forEach(id=>{if(id===me.uid)return;(walls[id]||[]).forEach(c=>{if(c.from===me.uid){sb++;if(c.bg!=='bal')sc++}})});
-  const sp=stats.sp|0;
+  const sp=Math.max(Object.values(sentPriv).reduce((a,x)=>a+x.length,0),stats.sp|0);
   return{sc:sc+sp,sb:sb+sp,rc:rec.filter(c=>c.bg!=='bal').length,rb:rec.length};
 }
 function paintStats(el){
@@ -471,7 +478,7 @@ async function claimRun(code){
   show('引き継ぎ中…',h('p',{},'データを移しています。数十秒かかることがあります。閉じずに待ってね。'));
   try{
     const r=(await callFn('claimTransfer')({code})).data||{};
-    subs.forEach(f=>f());subs=[];Object.values(wsubs).forEach(f=>f());wsubs={};walls={};cnt={};seen={};friends=[];priv=[];started=false;prof=null;hint=null;
+    subs.forEach(f=>f());subs=[];Object.values(wsubs).forEach(f=>f());wsubs={};walls={};cnt={};seen={};sentPriv={};friends=[];priv=[];started=false;prof=null;hint=null;
     try{localStorage.removeItem('prof_'+me.uid)}catch(e){}
     loading=true;slow=false;render();slowTimer();loadProfile(me);
     show('引き継ぎが完了しました',h('p',{},'友だち '+(r.friends|0)+'人、風船・カード '+(r.cards|0)+'枚を引き継ぎました。'),h('div',{class:'row'},btn('閉じる',()=>$('#dlg').close(),'btn')));
@@ -611,6 +618,43 @@ function view(f,anim=true){
     s.dd<=3?h('div',{class:'bar'},btn('素敵なカードを書く',()=>compose(f),'btn'),btn('風船を送る',e=>sendBalloon(f,e.currentTarget),'btn ghost')):h('p',{class:'note'},'カードや風船は、誕生日の3日前から送れます。'));
   cur=()=>view(f,false);
 }
+const DOTS='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="19" cy="12" r="2.2" fill="currentColor"/></svg>';
+const say=t=>floatTxt(t,innerWidth/2,innerHeight/2);
+const toNm=c=>((friends.find(x=>x.id===c.to)||{}).nm||'相手');
+function cardMenu(c){
+  const pv=c.k==='p',nm=toNm(c);
+  show('カードの操作',
+    h('div',{class:'yl'},
+      pv?btn('🌐 公開に戻す',()=>ask('公開に戻す',nm+'さんの友だちにも見えるようになります（中身は誕生日の当日から読めます）。よろしいですか？','はい',()=>makePublic(c)),'btn ghost yb')
+        :btn('🔒 '+nm+'さんにだけ見える（非公開）にする',()=>ask('相手にのみ非公開','このカードを'+nm+'さんだけに見えるようにします。ほかの友だちには見えなくなります。あとから「公開に戻す」こともできます。よろしいですか？','はい',()=>makePrivate(c)),'btn ghost yb'),
+      btn('🗑 削除',()=>delCard(c),'btn ghost yb')),
+    h('div',{class:'row'},btn('閉じる',()=>$('#dlg').close(),'btn s ghost')));
+}
+const delCard=c=>ask('カードの削除','本当によろしいですか？','はい',async()=>{
+  const pv=c.k==='p';
+  try{await remove(ref(db,(pv?'privbody/':'body/')+c.to+'/'+c.id));await remove(ref(db,(pv?'private/':'wall/')+c.to+'/'+c.id));say('削除しました')}
+  catch(e){say('削除できませんでした')}
+});
+// 公開⇄非公開の入れ替え：先に新しい側を作ってから古い側を消す（途中で失敗したら新しい側を片づける）
+async function moveCard(c,toPrivate){
+  const src=toPrivate?['body/','wall/']:['privbody/','private/'],dst=toPrivate?['privbody/','private/']:['body/','wall/'];
+  let r=null,cut=false;
+  try{
+    const bs=await get(ref(db,src[0]+c.to+'/'+c.id));if(!bs.exists())throw 0;
+    const t=String(bs.val().t||''),ot=c.ot>=Date.now()-23*36e5?c.ot:Date.now()-36e5;
+    r=push(ref(db,dst[1]+c.to));
+    await set(r,{from:me.uid,fromNm:prof.nm,bg:c.bg,bl:c.bl,y:c.y,ts:serverTimestamp(),ot});
+    await set(ref(db,dst[0]+c.to+'/'+r.key),{t});
+    await remove(ref(db,src[0]+c.to+'/'+c.id));cut=true;
+    try{await remove(ref(db,src[1]+c.to+'/'+c.id))}catch(e){await remove(ref(db,src[1]+c.to+'/'+c.id))}
+    if(toPrivate)runTransaction(ref(db,`stats/${me.uid}/sp`),v=>(v||0)+1).catch(()=>{});
+    say(toPrivate?'非公開にしました':'公開に戻しました');
+  }catch(e){
+    if(r&&!cut){try{await remove(ref(db,dst[0]+c.to+'/'+r.key))}catch(_){}try{await remove(r)}catch(_){}}
+    say(toPrivate?'非公開にできませんでした':'公開に戻せませんでした');
+  }
+}
+const makePrivate=c=>moveCard(c,true),makePublic=c=>moveCard(c,false);
 const bodies={},bsubs={};
 function watchBody(c){
   if(bsubs[c.id])return;
@@ -623,7 +667,7 @@ function floatTxt(t,x,y){const e=h('div',{class:'ft',style:`left:${x}px;top:${y}
 function sparks(x,y){for(let i=0;i<7;i++){const e=h('span',{class:'sp',style:`left:${x}px;top:${y}px;--x:${(Math.random()-.5)*120}px;--y:${(Math.random()-.8)*110}px`},'✨');document.body.append(e);setTimeout(()=>e.remove(),750)}}
 function pickYear(f){
   const me_=f.id===me.uid,s=nxt(f),m=new Map();
-  [...(walls[f.id]||[]),...(me_?priv:[])].forEach(c=>{if(c.y<=s.y)m.set(c.y,(m.get(c.y)||0)+1)});
+  [...(walls[f.id]||[]),...(me_?priv:(sentPriv[f.id]||[]))].forEach(c=>{if(c.y<=s.y)m.set(c.y,(m.get(c.y)||0)+1)});
   if(!m.has(s.y))m.set(s.y,0);
   show((me_?'わたし':f.nm+'さん')+'のカード',h('p',{class:'note'},'何年度のカードを見る？'),
     h('div',{class:'yl'},[...m].sort((a,b)=>b[0]-a[0]).map(([y,n])=>h('button',{class:'btn ghost yb',onclick:()=>{$('#dlg').close();cardPage(f,y)}},y+'年度',h('small',{},' ・ 風船'+n+'個'+(y===s.y&&s.dd>0?' 🔒':''))))));
@@ -633,7 +677,7 @@ function cardPage(f,y){
   const me_=f.id===me.uid,shown=new Set(),rl=h('div',{id:'rl'});let first=true,combo=0,ct=0,last=0;
   dropBodies();['#cl','#rl','#gb','#wb'].forEach(q=>{const e=$(q);if(e)e.remove()});
   const close=()=>{curFull=null;dropBodies();['#cl','#rl','#gb','#wb'].forEach(q=>{const e=$(q);if(e)e.remove()})};
-  const all=()=>[...(walls[f.id]||[]),...(me_?priv:[])].filter(c=>c.y===y).sort((a,b)=>(a.ts||0)-(b.ts||0));
+  const all=()=>[...(walls[f.id]||[]),...(me_?priv:(sentPriv[f.id]||[]))].filter(c=>c.y===y).sort((a,b)=>(a.ts||0)-(b.ts||0));
   const sync=()=>{all().slice(-60).forEach((c,i)=>{
     if(shown.has(c.id))return;shown.add(c.id);
     const r=[...c.id].reduce((a,ch)=>(a*31+ch.charCodeAt(0))|0,7),q=Math.abs(r),
@@ -664,6 +708,7 @@ function cardPage(f,y){
         else if(t==='')pa.textContent='カードを読み込めませんでした。';
         else pa.append(String(t).slice(0,300),h('div',{class:'fr'},'— '+String(c.fromNm||'').slice(0,20)+(c.k==='p'?'（非公開）':'')));
       }
+      if(c.from===me.uid){const mb=h('button',{class:'cm','aria-label':'カードの操作',onclick:()=>cardMenu(c)});mb.innerHTML=DOTS;pa.append(mb)}
       o.append(pa);
     });
     if(!L.length)o.append(h('p',{class:'note',style:'text-align:center;color:#fff;margin-top:24px'},'まだカードがありません'));
@@ -803,7 +848,7 @@ async function loadProfile(u){
   if(prof&&me&&me.uid===u.uid)setTimeout(()=>{if(!$('#dlg').open)askNotifOnce()},800);
 }
 onAuthStateChanged(auth,u=>{
-  subs.forEach(f=>f());subs=[];Object.values(wsubs).forEach(f=>f());wsubs={};walls={};cnt={};seen={};stats={};dropBodies();
+  subs.forEach(f=>f());subs=[];Object.values(wsubs).forEach(f=>f());wsubs={};walls={};cnt={};seen={};stats={};sentPriv={};dropBodies();
   if(xferUn){xferUn();xferUn=null}
   me=u;nameOnly=!!u&&u.isAnonymous;prof=null;friends=[];priv=[];started=false;loadErr=false;
   if(!u){loading=lineBusy;render();return}

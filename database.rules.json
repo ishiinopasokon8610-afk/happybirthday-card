@@ -87,9 +87,9 @@
     "private": {
       "$to": {
         ".indexOn": ["from"],
-        ".read": "auth != null && auth.uid === $to",
+        ".read": "auth != null && (auth.uid === $to || (query.orderByChild === 'from' && query.equalTo === auth.uid))",
         "$id": {
-          ".write": "auth != null && ((!data.exists() && root.child('friends').child($to).child(auth.uid).exists()) || (data.exists() && !newData.exists() && data.child('from').val() === auth.uid && now - data.child('ts').val() < 60000))",
+          ".write": "auth != null && ((!data.exists() && root.child('friends').child($to).child(auth.uid).exists()) || (data.exists() && !newData.exists() && data.child('from').val() === auth.uid))",
           ".validate": "newData.hasChildren(['from','fromNm','bg','bl','y','ts','ot']) && newData.child('from').val() === auth.uid && newData.child('fromNm').val() === root.child('profiles').child(auth.uid).child('nm').val() && newData.child('ot').val() >= now - 86400000 && newData.child('ot').val() <= now + 691200000",
           "from": {
             ".validate": "newData.isString()"
@@ -155,7 +155,7 @@
     "privbody": {
       "$to": {
         "$id": {
-          ".read": "auth != null && auth.uid === $to && now >= root.child('private').child($to).child($id).child('ot').val()",
+          ".read": "auth != null && (root.child('private').child($to).child($id).child('from').val() === auth.uid || (auth.uid === $to && now >= root.child('private').child($to).child($id).child('ot').val()))",
           ".write": "auth != null && root.child('private').child($to).child($id).child('from').val() === auth.uid",
           ".validate": "newData.hasChildren(['t'])",
           "t": {
@@ -170,7 +170,7 @@
     "body": {
       "$to": {
         "$id": {
-          ".read": "auth != null && (auth.uid === $to || root.child('friends').child($to).child(auth.uid).exists()) && now >= root.child('wall').child($to).child($id).child('ot').val()",
+          ".read": "auth != null && (root.child('wall').child($to).child($id).child('from').val() === auth.uid || ((auth.uid === $to || root.child('friends').child($to).child(auth.uid).exists()) && now >= root.child('wall').child($to).child($id).child('ot').val()))",
           ".write": "auth != null && root.child('wall').child($to).child($id).child('from').val() === auth.uid",
           ".validate": "newData.hasChildren(['t'])",
           "t": {
