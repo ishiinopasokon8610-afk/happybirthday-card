@@ -16,6 +16,9 @@
         "d": {
           ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 31"
         },
+        "ph": {
+          ".validate": "newData.isString() && newData.val().length <= 400 && newData.val().matches(/^https:\\/\\/(lh[0-9]\\.googleusercontent\\.com|profile\\.line-scdn\\.net|obs\\.line-scdn\\.net)\\/.*$/)"
+        },
         "$other": {
           ".validate": false
         }
@@ -86,7 +89,9 @@
     },
     "private": {
       "$to": {
-        ".indexOn": ["from"],
+        ".indexOn": [
+          "from"
+        ],
         ".read": "auth != null && (auth.uid === $to || (query.orderByChild === 'from' && query.equalTo === auth.uid))",
         "$id": {
           ".write": "auth != null && ((!data.exists() && root.child('friends').child($to).child(auth.uid).exists()) || (data.exists() && !newData.exists() && data.child('from').val() === auth.uid))",
@@ -112,6 +117,12 @@
           "ot": {
             ".validate": "newData.isNumber()"
           },
+          "st": {
+            ".validate": "newData.isString() && newData.val().length <= 8"
+          },
+          "fr": {
+            ".validate": "newData.isString() && newData.val().length <= 3"
+          },
           "$other": {
             ".validate": false
           }
@@ -120,7 +131,9 @@
     },
     "wall": {
       "$to": {
-        ".indexOn": ["from"],
+        ".indexOn": [
+          "from"
+        ],
         ".read": "auth != null && (auth.uid === $to || root.child('friends').child($to).child(auth.uid).exists())",
         "$id": {
           ".write": "auth != null && ((data.exists() && !newData.exists() && data.child('from').val() === auth.uid) || (!data.exists() && root.child('friends').child($to).child(auth.uid).exists()))",
@@ -145,6 +158,12 @@
           },
           "ot": {
             ".validate": "newData.isNumber()"
+          },
+          "st": {
+            ".validate": "newData.isString() && newData.val().length <= 8"
+          },
+          "fr": {
+            ".validate": "newData.isString() && newData.val().length <= 3"
           },
           "$other": {
             ".validate": false
@@ -191,6 +210,15 @@
           "p": {
             ".read": "auth != null && auth.uid === $to"
           }
+        }
+      }
+    },
+    "reads": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$id": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.val() === true"
         }
       }
     }
