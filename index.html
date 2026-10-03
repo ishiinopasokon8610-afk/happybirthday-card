@@ -277,7 +277,7 @@ const okP=p=>p&&p.m>=1&&p.m<=12&&p.d>=1&&p.d<=31;
 const notifOn=()=>{try{return localStorage.getItem('notif')==='1'&&Notification.permission==='granted'}catch(e){return false}};
 
 let sentPriv={},banKey='',banOff=false,banT=null,stats={},statsEl=null,me=null,prof=null,friends=[],priv=[],walls={},cnt={},wsubs={},subs=[],cur=null,seen={},drawn=new Set(),partyDone=false,loading=true,slow=false,loadErr=false,started=false,hint=null,hintBusy=false,xferUn=null,nameOnly=false;
-let linePic='',claimsDone=false,phBusy=false;
+let linePic='',claimsDone=false,phBusy=false,phAgain=false;
 try{const q=new URLSearchParams(location.search).get('add');if(q)sessionStorage.setItem('add',q)}catch(e){}
 
 function show(t,...c){cur=null;$('#dt').textContent=t;$('#db').replaceChildren(...c.flat().filter(x=>x!=null&&x!==false));if(!$('#dlg').open)$('#dlg').showModal()}
@@ -886,7 +886,8 @@ function myPh(){
 }
 const photoOf=u=>u===(me&&me.uid)?(myPh()||(prof&&prof.ph)||''):((friends.find(x=>x.id===u)||{}).ph||'');
 async function syncPhoto(){ // 自分のプロフィールの写真を、いまのアカウントの写真に合わせる（友だちにも見えるようにする）
-  if(!me||!prof||!claimsDone||phBusy)return;
+  if(!me||!prof||!claimsDone)return;
+  if(phBusy){phAgain=true;return}
   const uid=me.uid,want=myPh();
   if((prof.ph||'')===want)return;
   phBusy=true;
@@ -895,7 +896,13 @@ async function syncPhoto(){ // 自分のプロフィールの写真を、いま�
     if(me&&me.uid===uid&&prof){prof={...prof};if(want)prof.ph=want;else delete prof.ph;try{localStorage.setItem('prof_'+uid,JSON.stringify(prof))}catch(e){}render()}
   }catch(e){}
   phBusy=false;
+  if(phAgain){phAgain=false;syncPhoto()}
 }
+// アプリに戻ってきたとき、アカウントの最新の写真を取り直す（ログアウト不要）
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden||!me||!claimsDone)return;
+  const u=me;u.reload().catch(()=>{}).then(()=>{if(me===u){syncPhoto();if(prof)render()}});
+});
 
 // ---- LINEで招待 ----
 const lineInviteUrl=()=>'https://line.me/R/share?text='+encodeURIComponent('おたんじょうびカードで、友だちになろう🎈 誕生日をお祝いし合おうね！\n'+base+'?add='+me.uid);
@@ -1110,6 +1117,7 @@ function party(){
 // ---- LINEログイン ----
 const LINE_ID='2011832628',LINE_CB='https://ishiinopasokon8610-afk.github.io/happybirthday-card/';
 let lineBusy=false;
+const linePhTried=()=>{try{return localStorage.getItem('lph_'+me.uid)==='1'}catch(e){return false}};
 function lineLogin(){
   const st=rid()+rid();
   // アプリ（ホーム画面）から開くと、戻ってきたときに sessionStorage が消えることがあるので localStorage にも控える
@@ -1152,6 +1160,7 @@ function render(){
   A.append(h('div',{class:'box mine'},icon(()=>inbox(),'わたしのカード'),
     h('div',{class:'g'},h('div',{class:'nmr'},avatar(myPh()||prof.ph,34),h('b',{},prof.nm)),h('div',{class:'note'},prof.m+'月'+prof.d+'日 ・ '+(my.dd===0?'今日が誕生日！':'あと'+my.dd+'日')),h('div',{},'届いたカード '+Math.max((cnt[me.uid+'w']||0)+(cnt[me.uid+'p']||0),(walls[me.uid]||[]).length+priv.length)+'枚')),
     btn('✉ カード',()=>inbox()),btn('編集',()=>show('プロフィール編集',profForm(true)))));
+  if(/^line:/.test(me.uid)&&!myPh()&&!prof.ph&&!linePhTried())A.append(h('div',{class:'box'},h('p',{class:'note'},'LINEの写真を表示するには、一度だけLINEで確認が必要です（ログアウトはしません。データもそのままです）。'),btn('LINEの写真を取得',()=>{try{localStorage.setItem('lph_'+me.uid,'1')}catch(e){}lineLogin()},'btn s')));
   A.append(h('div',{class:'row'},btn('友だち招待QR',invite,'btn'),lineInviteBtn(),btn('📅 今月の誕生日',()=>calDlg(0),'btn ghost')));
   A.append(h('h2',{},'友だちの誕生日'));
   if(!fl.length)A.append(h('p',{class:'note'},'まだ友だちがいません。「友だち招待QR」を見せて読み取ってもらおう！'));
