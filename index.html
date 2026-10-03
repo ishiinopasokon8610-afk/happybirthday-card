@@ -528,6 +528,7 @@ function loginBox(){
   return h('div',{class:'box'},
     h('p',{class:'warn'},'🔒 名前はフルネームを使わないでね。下の名前かニックネームだけにしてください。'),
     h('p',{},'GoogleまたはLINEでログインして、友だちと誕生日カードを送り合おう。'),
+    (standalone()&&isIOS)&&h('p',{class:'note'},'ホーム画面のアプリでは、LINEログインの途中でSafariに切り替わり、アプリに戻れないことがあります。その場合は、Safariで開いてLINEログイン →「詳細設定」で引っ越しコードを作り、このアプリで「名前だけ」で始めて、登録画面の「前のアカウントから引き継ぐ」にコードを入れてね。'),
     isLine?h('p',{class:'warn'},'LINEのブラウザで開いている場合は、必ず「LINEでログイン」を押してください。（Googleではログインできません）'):inApp&&h('p',{class:'note'},'このアプリ内ブラウザではGoogleログインできないことがあります。右上のメニューから「ブラウザで開く」を選んでね。'),
     h('div',{class:'row'},btn(withIcon(G_SVG,'Googleでログイン'),async()=>{
       const p=new GoogleAuthProvider();if(GOOGLE_BIRTHDAY)p.addScope('https://www.googleapis.com/auth/user.birthday.read');
@@ -630,10 +631,22 @@ function cardMenu(c){
       btn('🗑 削除',()=>delCard(c),'btn ghost yb')),
     h('div',{class:'row'},btn('閉じる',()=>$('#dlg').close(),'btn s ghost')));
 }
-const delCard=c=>ask('カードの削除','本当によろしいですか？','はい',async()=>{
-  const pv=c.k==='p';
-  try{await remove(ref(db,(pv?'privbody/':'body/')+c.to+'/'+c.id));await remove(ref(db,(pv?'private/':'wall/')+c.to+'/'+c.id));say('削除しました')}
-  catch(e){say('削除できませんでした')}
+// カードを消しても風船は残す：先に「風船だけ」のデータを作り、そのあと文章と元のカードを消す
+const keepBal=new Set();
+const delCard=c=>ask('カードの削除','カードの文章だけを消します。風船は残ります。よろしいですか？','はい',async()=>{
+  const pv=c.k==='p',col=pv?'private/':'wall/',bcol=pv?'privbody/':'body/';
+  let r=null,cut=false;
+  try{
+    const ot=c.ot>=Date.now()-23*36e5?c.ot:Date.now()-36e5;
+    r=push(ref(db,col+c.to));keepBal.add(r.key);
+    await set(r,{from:me.uid,fromNm:prof.nm,bg:'bal',bl:c.bl|0,y:c.y,ts:serverTimestamp(),ot});
+    await remove(ref(db,bcol+c.to+'/'+c.id));cut=true;
+    try{await remove(ref(db,col+c.to+'/'+c.id))}catch(e){await remove(ref(db,col+c.to+'/'+c.id))}
+    say('カードを削除しました（風船は残しました）');
+  }catch(e){
+    if(r&&!cut){keepBal.delete(r.key);try{await remove(r)}catch(_){}}
+    say('削除できませんでした');
+  }
 });
 // 公開⇄非公開の入れ替え：先に新しい側を作ってから古い側を消す（途中で失敗したら新しい側を片づける）
 async function moveCard(c,toPrivate){
@@ -680,6 +693,7 @@ function cardPage(f,y){
   const all=()=>[...(walls[f.id]||[]),...(me_?priv:(sentPriv[f.id]||[]))].filter(c=>c.y===y).sort((a,b)=>(a.ts||0)-(b.ts||0));
   const sync=()=>{all().slice(-60).forEach((c,i)=>{
     if(shown.has(c.id))return;shown.add(c.id);
+    if(keepBal.has(c.id))return; // カード削除で作り直した風船は、すでに浮かんでいる風船をそのまま使う
     const r=[...c.id].reduce((a,ch)=>(a*31+ch.charCodeAt(0))|0,7),q=Math.abs(r),
     b=h('button',{class:'rb','aria-label':'風船',style:`left:${3+q%86}%;bottom:calc(${(q>>3)%24}vh + env(safe-area-inset-bottom,0px));--d:${first?i*.07:0}s`,onclick:e=>{
       const t=e.currentTarget,k=t.getBoundingClientRect();sparks(k.left+23,k.top+30);floatTxt((c.fromNm||'友だち')+'さん',k.left+23,k.top);t.classList.add('pk');setTimeout(()=>t.remove(),300)}});
@@ -692,27 +706,54 @@ function cardPage(f,y){
     const n=sentN()+1;lastN=n;combo=t-ct<1500?combo+1:1;ct=t;floatTxt('+'+n,x,yy);if(combo%5===0)party();setBadge();
     try{await sendCard(f,false,null,'bal',Math.floor(Math.random()*BAL.length))}catch(er){lastN=mineN();setBadge();floatTxt('送れませんでした',x,yy)}
   }});g.innerHTML=balSVG(BAL[2],false);g.append(h('span',{class:'gbc'},'+'+sentN()));return g};
+  // 画面を作り直さず、変わったところだけ更新する（点滅・アニメの再生を防ぐ）
+  let o=null,ttl=null,dt2=null,lst=null,empty=null;const pcs=new Map();
   const draw=()=>{
-    const old=$('#cl'),st=old?old.scrollTop:0;if(old)old.remove();
-    const s=nxt(f),A=all(),L=A.filter(c=>c.bg!=='bal').reverse(),lk=y===s.y&&s.dd>0,can=!me_&&y===s.y&&s.dd<=3,o=h('div',{id:'cl'}),ev=h('div',{class:'env'});
-    ev.innerHTML=ENV;ev.append(h('div',{class:'ttl'},'✉ '+y+'年度',h('br'),f.nm+'さん'),h('div',{class:'dt2'},'風船 '+A.length+'個 ・ カード '+L.length+'枚'));
-    o.append(h('button',{class:'x','aria-label':'閉じる',onclick:close},'‹'),ev);
+    const s=nxt(f),A=all(),L=A.filter(c=>c.bg!=='bal').reverse(),lk=y===s.y&&s.dd>0,can=!me_&&y===s.y&&s.dd<=3;
+    if(!o||!o.isConnected){
+      o=h('div',{id:'cl'});const ev=h('div',{class:'env'});
+      ev.innerHTML=ENV;ttl=h('div',{class:'ttl'});dt2=h('div',{class:'dt2'});ev.append(ttl,dt2);
+      lst=h('div',{});empty=h('p',{class:'note',style:'text-align:center;color:#fff;margin-top:24px'},'まだカードがありません');
+      o.append(h('button',{class:'x','aria-label':'閉じる',onclick:close},'‹'),ev,lst);
+      pcs.clear();document.body.append(o);
+    }
+    ttl.replaceChildren('✉ '+y+'年度',h('br'),f.nm+'さん');
+    dt2.textContent='風船 '+A.length+'個 ・ カード '+L.length+'枚';
+    const want=[];
     L.forEach((c,i)=>{
-      const pa=h('div',{class:'paper'+(lk?' lk':'')+(first?' pin':''),style:'--i:'+Math.min(i,8)});
-      if(lk)pa.textContent='🔒 誕生日までお楽しみに！';
-      else{
-        const t=c.t!=null?c.t:bodies[c.id];
-        if(c.t==null)watchBody(c);
-        pa.style.cssText=bgStyle(BG[c.bg]||BG.a1)+';--i:'+Math.min(i,8);
-        if(t==null)pa.textContent='読み込み中…';
-        else if(t==='')pa.textContent='カードを読み込めませんでした。';
-        else pa.append(String(t).slice(0,300),h('div',{class:'fr'},'— '+String(c.fromNm||'').slice(0,20)+(c.k==='p'?'（非公開）':'')));
+      let e=pcs.get(c.id);
+      if(!e){
+        e={el:h('div',{class:'paper'+(first?' pin':''),style:'--i:'+Math.min(i,8)}),key:null};
+        if(first)e.el.addEventListener('animationend',()=>e.el.classList.remove('pin'),{once:true});
+        pcs.set(c.id,e);
       }
-      if(c.from===me.uid){const mb=h('button',{class:'cm','aria-label':'カードの操作',onclick:()=>cardMenu(c)});mb.innerHTML=DOTS;pa.append(mb)}
-      o.append(pa);
+      const pa=e.el;
+      let t=null;
+      if(!lk){t=c.t!=null?c.t:bodies[c.id];if(c.t==null)watchBody(c)}
+      const key=[lk,t,c.bg,c.fromNm,c.k,c.from===me.uid].join('\u0001');
+      if(e.key!==key){
+        e.key=key;
+        pa.classList.toggle('lk',lk);
+        pa.replaceChildren();
+        if(lk){pa.style.cssText='--i:'+Math.min(i,8);pa.textContent='🔒 誕生日までお楽しみに！'}
+        else{
+          pa.style.cssText=bgStyle(BG[c.bg]||BG.a1)+';--i:'+Math.min(i,8);
+          if(t==null)pa.textContent='読み込み中…';
+          else if(t==='')pa.textContent='カードを読み込めませんでした。';
+          else pa.append(String(t).slice(0,300),h('div',{class:'fr'},'— '+String(c.fromNm||'').slice(0,20)+(c.k==='p'?'（非公開）':'')));
+        }
+        if(c.from===me.uid){const mb=h('button',{class:'cm','aria-label':'カードの操作',onclick:()=>cardMenu(c)});mb.innerHTML=DOTS;pa.append(mb)}
+      }
+      want.push(pa);
     });
-    if(!L.length)o.append(h('p',{class:'note',style:'text-align:center;color:#fff;margin-top:24px'},'まだカードがありません'));
-    document.body.append(o);o.scrollTop=st;first=false;
+    const ids=new Set(L.map(c=>c.id));
+    pcs.forEach((e,id)=>{if(!ids.has(id)){e.el.remove();pcs.delete(id)}});
+    if(!L.length){if(empty.parentNode!==lst)lst.replaceChildren(empty)}
+    else{
+      if(empty.parentNode===lst)empty.remove();
+      want.forEach((el,i)=>{if(lst.children[i]!==el)lst.insertBefore(el,lst.children[i]||null)});
+    }
+    first=false;
     if(!rl.isConnected)document.body.append(rl);sync();
     const g=$('#gb');if(can&&!g)document.body.append(gift());else if(!can&&g)g.remove();
     const wbn=$('#wb');if(can&&!wbn)document.body.append(h('button',{id:'wb',class:'btn','aria-label':'カードを書く',onclick:()=>compose(f)},'✉ カードを書く'));else if(!can&&wbn)wbn.remove();
@@ -742,7 +783,10 @@ function flyAway(n){
 function compose(f){
   let bg='a1',bl=0;
   const ta=h('textarea',{maxlength:300,placeholder:'メッセージを書こう'}),cnt=h('span',{class:'note'},'0/300'),pri=h('input',{type:'checkbox'}),out=h('p',{class:'note'}),pv=h('div',{class:'cv'}),hb=h('div',{class:'hb'}),hg=h('div',{class:'hang'},hb,pv);
-  const upd=()=>{pv.style.cssText=bgStyle(BG[bg]);pv.textContent=ta.value||'ここにメッセージが出ます';cnt.textContent=ta.value.length+'/300'};
+  const upd=()=>{
+    // 定型文・おまかせ・貼り付けなど、maxlengthが効かない入力でも300字で必ず切る（絵文字の途中では切らない）
+    if(ta.value.length>300){let v=ta.value.slice(0,300);if(/[\ud800-\udbff]$/.test(v))v=v.slice(0,-1);ta.value=v}
+    pv.style.cssText=bgStyle(BG[bg]);pv.textContent=ta.value||'ここにメッセージが出ます';cnt.textContent=ta.value.length+'/300'};
   const bal=()=>hb.replaceChildren(...[0,1,2].map(i=>{const e=h('span');e.innerHTML=balSVG(BAL[(bl+i*2)%BAL.length],false);return e}));
   ta.oninput=upd;
   const chips=h('div',{class:'row'},['お誕生日おめでとう！','素敵な一年になりますように！','いつもありがとう！','最高の一日を過ごしてね！'].map(t=>btn(t,()=>{ta.value=ta.value?ta.value+'\n'+t:t;upd()},'btn s ghost')));
@@ -776,13 +820,18 @@ function party(){
 const LINE_ID='2011832628',LINE_CB='https://ishiinopasokon8610-afk.github.io/happybirthday-card/';
 let lineBusy=false;
 function lineLogin(){
-  const st=rid()+rid();try{sessionStorage.setItem('lst',st)}catch(e){}
+  const st=rid()+rid();
+  // アプリ（ホーム画面）から開くと、戻ってきたときに sessionStorage が消えることがあるので localStorage にも控える
+  try{sessionStorage.setItem('lst',st)}catch(e){}
+  try{localStorage.setItem('lst',st)}catch(e){}
   location.href='https://access.line.me/oauth2/v2.1/authorize?'+new URLSearchParams({response_type:'code',client_id:LINE_ID,redirect_uri:LINE_CB,state:st,scope:'profile openid'});
 }
 async function lineBack(){
   const q=new URLSearchParams(location.search),code=q.get('code'),st=q.get('state');
   if(!code||!st)return;
-  let ok=false;try{ok=st===sessionStorage.getItem('lst');sessionStorage.removeItem('lst')}catch(e){}
+  let ok=false;
+  try{ok=st===sessionStorage.getItem('lst');sessionStorage.removeItem('lst')}catch(e){}
+  try{if(!ok)ok=st===localStorage.getItem('lst');localStorage.removeItem('lst')}catch(e){}
   history.replaceState(null,'',location.pathname);
   if(!ok){msg('LINEログインを確認できませんでした。もう一度試してね。');return}
   lineBusy=true;loading=true;slow=false;setKnown(true);msg('');render();slowTimer();
