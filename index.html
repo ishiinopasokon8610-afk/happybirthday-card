@@ -128,6 +128,8 @@ dialog[open]{animation:dlgin .4s cubic-bezier(.2,1.3,.4,1)}dialog[open]::backdro
 @font-face{font-family:"F_zenmaru";font-weight:500;src:url("fonts/zenmaru-medium.woff2") format("woff2");font-display:swap}
 @font-face{font-family:"F_zenmaru";font-weight:700;src:url("fonts/zenmaru-bold.woff2") format("woff2");font-display:swap}
 @font-face{font-family:"F_zenmaru";font-weight:900;src:url("fonts/zenmaru-black.woff2") format("woff2");font-display:swap}
+#wb{position:fixed;right:calc(96px + env(safe-area-inset-right,0px));bottom:calc(26px + env(safe-area-inset-bottom,0px));z-index:65;height:52px;padding:0 1.3em;white-space:nowrap;box-shadow:0 4px 14px #0004}
+#cl{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
 .gbc{position:absolute;top:-6px;right:-6px;background:var(--acc);color:#fff;border-radius:999px;font-size:12px;font-weight:700;padding:1px 7px}
 
 :root[data-theme=dark]{--bg:#0f1a14;--fg:#e4f1e9;--sub:#8fae9d;--card:#17261e;--line:#2b4338;--acc2:#7fdca8;--tint:#1d3328;--inp:#0f1a14;--warnbg:#3a2a12;--warnbd:#8a6020;--warnfg:#ffcf8a;color-scheme:dark}
@@ -180,7 +182,7 @@ function applyTheme(t,save){
   const b=$('#th');if(b){const l=t==='dark'?'ライトモードにする':'ダークモードにする';b.textContent=t==='dark'?'☀️':'🌙';b.setAttribute('aria-label',l);b.title=l}
   if(save){try{localStorage.setItem('theme',t)}catch(e){}}
 }
-$('#th').onclick=()=>applyTheme(curTheme()==='dark'?'light':'dark',true);
+$('#th').onclick=()=>{const t=curTheme()==='dark'?'light':'dark';applyTheme(t,true);if(me)set(ref(db,`settings/${me.uid}/theme`),t).catch(()=>{})};
 applyTheme(curTheme());
 const h=(t,a={},...c)=>{const e=document.createElement(t);for(const k in a){if(k==='class')e.className=a[k];else if(k.startsWith('on'))e[k]=a[k];else e.setAttribute(k,a[k])}c.flat().forEach(x=>{if(x!=null&&x!==false)e.append(x)});return e};
 const BAL=['#2f9e6a','#7cc99a','#f2a6b8','#f6c85f','#79b8f0','#b69cf0'];
@@ -233,23 +235,53 @@ function notice(arr,k){
 }
 function start(){
   const uid=me.uid,on=(p,fn)=>subs.push(onValue(ref(db,p),fn,e=>msg('読み込みエラー：'+e.code)));
+  const pm={},ps={},wy={},rt={};let fids=new Set();
+  const rebuild=()=>{friends=[...fids].map(id=>pm[id]).filter(okP)};
+  // 風船・カードの購読（誕生日の年が変わったときだけ張り直す）
   const watch=id=>{
-    if(wsubs[id])return;
-    const pr=id===uid?prof:friends.find(f=>f.id===id),y=pr?nxt(pr).y:null,no=()=>{};
+    const pr=id===uid?prof:pm[id];
+    if(!okP(pr))return;
+    const y=nxt(pr).y,no=()=>{};
+    if(wsubs[id]&&wy[id]===y)return;
+    if(wsubs[id])wsubs[id]();
+    wy[id]=y;
     const u1=onValue(ref(db,'wall/'+id),s=>{walls[id]=list(s,'w',id);if(id===uid)notice(walls[id],'w');refresh()},e=>{if(id===uid)msg('カードの読み込みエラー：'+(e.code||''))});
-    const u2=y!=null?onValue(ref(db,`balloons/${id}/${y}/w`),s=>{cnt[id+'w']=s.val();refresh()},no):no;
-    const u3=y!=null&&id===uid?onValue(ref(db,`balloons/${id}/${y}/p`),s=>{cnt[id+'p']=s.val();refresh()},no):no;
+    const u2=onValue(ref(db,`balloons/${id}/${y}/w`),s=>{cnt[id+'w']=s.val();refresh()},no);
+    const u3=id===uid?onValue(ref(db,`balloons/${id}/${y}/p`),s=>{cnt[id+'p']=s.val();refresh()},no):no;
     wsubs[id]=()=>{u1();u2();u3()};
   };
-  on('friends/'+uid,async s=>{
-    friends=(await Promise.all(Object.keys(s.val()||{}).map(async id=>{try{const p=await get(ref(db,'profiles/'+id));return p.exists()?{...p.val(),id}:null}catch(e){return null}}))).filter(okP);
-    const ids=new Set([uid,...friends.map(f=>f.id)]);
-    ids.forEach(watch);
-    Object.keys(wsubs).forEach(id=>{if(!ids.has(id)){wsubs[id]();delete wsubs[id];delete walls[id]}});
-    refresh();
+  // 友だちのプロフィール（名前・誕生日の変更もすぐ反映）
+  const subProf=id=>{
+    ps[id]=onValue(ref(db,'profiles/'+id),s=>{
+      rt[id]=0;
+      if(s.exists())pm[id]={...s.val(),id};else delete pm[id];
+      rebuild();watch(id);refresh();
+    },()=>{
+      delete ps[id];
+      if((rt[id]=(rt[id]|0)+1)<=5)setTimeout(()=>{if(fids.has(id)&&!ps[id]&&me&&me.uid===uid)subProf(id)},3000);
+    });
+  };
+  subs.push(()=>{Object.values(ps).forEach(f=>f())});
+  watch(uid);
+  // 自分のプロフィール（別の端末での編集もすぐ反映）
+  on('profiles/'+uid,s=>{
+    const v=s.val();if(!s.exists()||!okP(v))return;
+    if(prof&&prof.nm===v.nm&&prof.m===v.m&&prof.d===v.d)return;
+    prof={...v,id:uid};try{localStorage.setItem('prof_'+uid,JSON.stringify(prof))}catch(e){}
+    watch(uid);refresh();
+  });
+  on('friends/'+uid,s=>{
+    fids=new Set(Object.keys(s.val()||{}));
+    fids.forEach(id=>{if(!ps[id])subProf(id)});
+    Object.keys(ps).forEach(id=>{if(!fids.has(id)){ps[id]();delete ps[id];delete pm[id]}});
+    Object.keys(wsubs).forEach(id=>{if(id!==uid&&!fids.has(id)){wsubs[id]();delete wsubs[id];delete walls[id];delete wy[id]}});
+    rebuild();refresh();
   });
   on('private/'+uid,s=>{priv=list(s,'p',uid);notice(priv,'p');refresh()});
   on('settings/'+uid+'/font',s=>{const k=s.val();if(k&&FONTS[k]&&k!==curFont()){setFont(k);render()}});
+  on('settings/'+uid+'/theme',s=>{const k=s.val();
+    if(k==='dark'||k==='light'){if(k!==curTheme())applyTheme(k,true)}
+    else{try{const l=localStorage.getItem('theme');if(l==='dark'||l==='light')set(ref(db,`settings/${uid}/theme`),l).catch(()=>{})}catch(e){}}});
   pend();refreshTok();
 }
 async function pend(){
@@ -502,7 +534,7 @@ function profForm(edit){
       if(!noSp(v)){msg('フルネームは使えません。スペースを入れず、下の名前かニックネームだけにしてね。');return}
       if(!m||!d||new Date(2024,m-1,d).getMonth()!==m-1){msg('誕生日を正しく選んでね。');return}
       const p={nm:v.slice(0,20),m,d},first=!prof;
-      try{await set(ref(db,'profiles/'+me.uid),p);prof=p;hint=null;msg('');
+      try{await set(ref(db,'profiles/'+me.uid),p);prof={...p,id:me.uid};hint=null;msg('');
         if(first&&me.email&&me.providerData.some(x=>x.providerId==='google.com'))set(ref(db,'notify/'+me.uid),{em:me.email,on:true,ts:Date.now()}).catch(()=>{});
         if($('#dlg').open)$('#dlg').close();if(first)start();render();if(first)askNotifOnce(me.isAnonymous?()=>recoveryDlg(false):null)}
       catch(e){msg('保存できませんでした（'+(e.code||'')+'）。Firebaseのルール設定を確認してね。')}
@@ -552,7 +584,12 @@ function view(f,anim=true){
     s.dd<=3?h('div',{class:'bar'},btn('素敵なカードを書く',()=>compose(f),'btn'),btn('風船を送る',e=>sendBalloon(f,e.currentTarget),'btn ghost')):h('p',{class:'note'},'カードや風船は、誕生日の3日前から送れます。'));
   cur=()=>view(f,false);
 }
-const bodies={};
+const bodies={},bsubs={};
+function watchBody(c){
+  if(bsubs[c.id])return;
+  bsubs[c.id]=onValue(ref(db,(c.k==='p'?'privbody/':'body/')+c.to+'/'+c.id),s=>{bodies[c.id]=s.exists()?String(s.val().t||''):null;if(curFull)curFull()},()=>{bodies[c.id]='';if(bsubs[c.id]){bsubs[c.id]();delete bsubs[c.id]}if(curFull)curFull()});
+}
+const dropBodies=()=>{Object.values(bsubs).forEach(f=>f());Object.keys(bsubs).forEach(k=>delete bsubs[k])};
 const PLUS='+1',RND=['お誕生日おめでとう！今年もいっぱい笑おうね🎉','生まれてきてくれてありがとう！最高の一年になりますように✨','おめでとう！風船いっぱいの一年を🎈','今日は主役！思いっきり楽しんでね🎂','大好きだよ！これからもよろしくね💐'];
 const inbox=()=>pickYear(prof);
 function floatTxt(t,x,y){const e=h('div',{class:'ft',style:`left:${x}px;top:${y}px`},t);document.body.append(e);setTimeout(()=>e.remove(),1200)}
@@ -563,11 +600,12 @@ function pickYear(f){
   if(!m.has(s.y))m.set(s.y,0);
   show((me_?'わたし':f.nm+'さん')+'のカード',h('p',{class:'note'},'何年度のカードを見る？'),
     h('div',{class:'yl'},[...m].sort((a,b)=>b[0]-a[0]).map(([y,n])=>h('button',{class:'btn ghost yb',onclick:()=>{$('#dlg').close();cardPage(f,y)}},y+'年度',h('small',{},' ・ 風船'+n+'個'+(y===s.y&&s.dd>0?' 🔒':''))))));
+  cur=()=>pickYear(f);
 }
 function cardPage(f,y){
   const me_=f.id===me.uid,shown=new Set(),rl=h('div',{id:'rl'});let first=true,combo=0,ct=0,last=0;
-  ['#cl','#rl','#gb'].forEach(q=>{const e=$(q);if(e)e.remove()});
-  const close=()=>{curFull=null;['#cl','#rl','#gb'].forEach(q=>{const e=$(q);if(e)e.remove()})};
+  dropBodies();['#cl','#rl','#gb','#wb'].forEach(q=>{const e=$(q);if(e)e.remove()});
+  const close=()=>{curFull=null;dropBodies();['#cl','#rl','#gb','#wb'].forEach(q=>{const e=$(q);if(e)e.remove()})};
   const all=()=>[...(walls[f.id]||[]),...(me_?priv:[])].filter(c=>c.y===y).sort((a,b)=>(a.ts||0)-(b.ts||0));
   const sync=()=>{all().slice(-60).forEach((c,i)=>{
     if(shown.has(c.id))return;shown.add(c.id);
@@ -576,13 +614,13 @@ function cardPage(f,y){
       const t=e.currentTarget,k=t.getBoundingClientRect();sparks(k.left+23,k.top+30);floatTxt((c.fromNm||'友だち')+'さん',k.left+23,k.top);t.classList.add('pk');setTimeout(()=>t.remove(),300)}});
     b.innerHTML=balSVG(BAL[Math.abs(c.bl|0)%BAL.length],false);rl.append(b)})};
   const mineN=()=>(walls[f.id]||[]).filter(c=>c.y===y&&c.from===me.uid).length;
+  let lastN=0;const sentN=()=>Math.max(mineN(),lastN),setBadge=()=>{const bb=$('#gb .gbc');if(bb)bb.textContent='+'+sentN()};
   const gift=()=>{const g=h('button',{id:'gb','aria-label':'風船をプレゼント',onclick:async e=>{
     const t=Date.now();if(t-last<350)return;last=t;
     const k=e.currentTarget.getBoundingClientRect(),x=k.left+k.width/2,yy=k.top-6;
-    if((walls[f.id]||[]).filter(c=>c.y===y&&c.from===me.uid).length>=10){floatTxt('ひとり10個まで！',x,yy);return}
-    combo=t-ct<1500?combo+1:1;ct=t;floatTxt(PLUS+(combo>1?' ×'+combo:''),x,yy);if(combo%5===0)party();{const bb=e.currentTarget.querySelector('.gbc');if(bb)bb.textContent=Math.min(10,mineN()+1)+'/10'}
-    try{await sendCard(f,false,null,'bal',Math.floor(Math.random()*BAL.length))}catch(er){floatTxt('送れませんでした',x,yy)}
-  }});g.innerHTML=balSVG(BAL[2],false);g.append(h('span',{class:'gbc'},mineN()+'/10'));return g};
+    const n=sentN()+1;lastN=n;combo=t-ct<1500?combo+1:1;ct=t;floatTxt('+'+n,x,yy);if(combo%5===0)party();setBadge();
+    try{await sendCard(f,false,null,'bal',Math.floor(Math.random()*BAL.length))}catch(er){lastN=mineN();setBadge();floatTxt('送れませんでした',x,yy)}
+  }});g.innerHTML=balSVG(BAL[2],false);g.append(h('span',{class:'gbc'},'+'+sentN()));return g};
   const draw=()=>{
     const old=$('#cl'),st=old?old.scrollTop:0;if(old)old.remove();
     const s=nxt(f),A=all(),L=A.filter(c=>c.bg!=='bal').reverse(),lk=y===s.y&&s.dd>0,can=!me_&&y===s.y&&s.dd<=3,o=h('div',{id:'cl'}),ev=h('div',{class:'env'});
@@ -593,10 +631,7 @@ function cardPage(f,y){
       if(lk)pa.textContent='🔒 誕生日までお楽しみに！';
       else{
         const t=c.t!=null?c.t:bodies[c.id];
-        if(c.t==null&&!(c.id in bodies)){
-          bodies[c.id]=null;
-          get(ref(db,(c.k==='p'?'privbody/':'body/')+c.to+'/'+c.id)).then(sn=>{bodies[c.id]=sn.exists()?String(sn.val().t||''):''}).catch(()=>{bodies[c.id]=''}).then(()=>{if(curFull)curFull()});
-        }
+        if(c.t==null)watchBody(c);
         pa.style.cssText=bgStyle(BG[c.bg]||BG.a1)+';--i:'+Math.min(i,8);
         if(t==null)pa.textContent='読み込み中…';
         else if(t==='')pa.textContent='カードを読み込めませんでした。';
@@ -605,11 +640,11 @@ function cardPage(f,y){
       o.append(pa);
     });
     if(!L.length)o.append(h('p',{class:'note',style:'text-align:center;color:#fff;margin-top:24px'},'まだカードがありません'));
-    if(can)o.append(h('div',{class:'cvb'},btn('✉ カードを書く',()=>{close();compose(f)},'btn')));
     document.body.append(o);o.scrollTop=st;first=false;
     if(!rl.isConnected)document.body.append(rl);sync();
     const g=$('#gb');if(can&&!g)document.body.append(gift());else if(!can&&g)g.remove();
-    {const g2=$('#gb'),bb=g2&&g2.querySelector('.gbc');if(bb)bb.textContent=mineN()+'/10'}
+    const wbn=$('#wb');if(can&&!wbn)document.body.append(h('button',{id:'wb',class:'btn','aria-label':'カードを書く',onclick:()=>compose(f)},'✉ カードを書く'));else if(!can&&wbn)wbn.remove();
+    setBadge();
   };
   curFull=draw;draw();
 }
@@ -707,7 +742,7 @@ function render(){
     const n=Math.max(cnt[p.id+'w']||0,(walls[p.id]||[]).filter(c=>c.y===p.y).length);
     A.append(h('div',{class:'row2'},icon(()=>pickYear(p),p.nm+'さんのカード'),
       h('div',{class:'g'},h('b',{},p.nm),h('div',{class:'note'},p.m+'月'+p.d+'日 ・ '+(p.dd===0?'今日！':'あと'+p.dd+'日')),h('div',{class:'note'},'風船 '+n+'個')),
-      btn('📖 カード',()=>pickYear(p)),p.dd<=3&&btn('✉ 書く',()=>compose(p)),p.dd<=3&&btn('🎈 風船',e=>sendBalloon(p,e.currentTarget)),
+      btn('📖 カード',()=>pickYear(p)),
       h('button',{class:'x2',onclick:()=>ask('友だちを解除','「'+p.nm+'」さんとの友だちを解除します。お互いの誕生日と風船が見えなくなります。よろしいですか？','解除する',async()=>{try{await remove(ref(db,`friends/${me.uid}/${p.id}`));await remove(ref(db,`friends/${p.id}/${me.uid}`))}catch(e){msg('解除できませんでした。')}})},'解除')));
   });
   const fs=h('select',{onchange:e=>{const k=e.target.value;setFont(k);set(ref(db,`settings/${me.uid}/font`),k).catch(()=>{})}},Object.entries(FONTS).map(([k,v])=>h('option',{value:k},v.n)));fs.value=curFont();
@@ -729,21 +764,21 @@ async function loadProfile(u){
   try{
     const s=await Promise.race([get(ref(db,'profiles/'+u.uid)),new Promise((_,r)=>setTimeout(()=>r({code:'timeout'}),20000))]);
     if(!me||me.uid!==u.uid)return;
-    prof=s.exists()?s.val():null;
+    prof=s.exists()?{...s.val(),id:u.uid}:null;
     if(prof){try{localStorage.setItem('prof_'+u.uid,JSON.stringify(prof))}catch(e){}if(!started){started=true;start()}}
   }catch(e){loadErr=e.code||'error'}
   loading=false;render();
   if(prof&&me&&me.uid===u.uid)setTimeout(()=>{if(!$('#dlg').open)askNotifOnce()},800);
 }
 onAuthStateChanged(auth,u=>{
-  subs.forEach(f=>f());subs=[];Object.values(wsubs).forEach(f=>f());wsubs={};walls={};cnt={};seen={};
+  subs.forEach(f=>f());subs=[];Object.values(wsubs).forEach(f=>f());wsubs={};walls={};cnt={};seen={};dropBodies();
   if(xferUn){xferUn();xferUn=null}
   me=u;nameOnly=!!u&&u.isAnonymous;prof=null;friends=[];priv=[];started=false;loadErr=false;
   if(!u){loading=lineBusy;render();return}
   u.getIdTokenResult().then(t=>{if(me===u&&t.claims.rec===true)nameOnly=true}).catch(()=>{});
   setKnown(true);
   let c=null;try{c=JSON.parse(localStorage.getItem('prof_'+u.uid))}catch(e){}
-  if(okP(c)){prof=c;started=true;start();loading=false;render()}
+  if(okP(c)){prof={...c,id:u.uid};started=true;start();loading=false;render()}
   loadProfile(u);
 });
 (()=>{const a=h('div',{id:'amb','aria-hidden':'true'});for(let i=0;i<7;i++){const e=h('span',{style:`left:${6+i*14}%;--d:${i*2.3}s;--t:${18+i%3*6}s;--z:${.55+i%3*.25}`});e.innerHTML=balSVG(BAL[i%6],false);a.append(e)}document.body.prepend(a)})();

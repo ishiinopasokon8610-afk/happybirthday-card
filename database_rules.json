@@ -64,6 +64,9 @@
         "font": {
           ".validate": "newData.isString() && newData.val().length <= 10"
         },
+        "theme": {
+          ".validate": "newData.isString() && (newData.val() === 'dark' || newData.val() === 'light')"
+        },
         "$other": {
           ".validate": false
         }
@@ -71,6 +74,7 @@
     },
     "private": {
       "$to": {
+        ".indexOn": ["from"],
         ".read": "auth != null && auth.uid === $to",
         "$id": {
           ".write": "auth != null && ((!data.exists() && root.child('friends').child($to).child(auth.uid).exists()) || (data.exists() && !newData.exists() && data.child('from').val() === auth.uid && now - data.child('ts').val() < 60000))",
@@ -104,6 +108,7 @@
     },
     "wall": {
       "$to": {
+        ".indexOn": ["from"],
         ".read": "auth != null && (auth.uid === $to || root.child('friends').child($to).child(auth.uid).exists())",
         "$id": {
           ".write": "auth != null && ((data.exists() && !newData.exists() && data.child('from').val() === auth.uid) || (!data.exists() && root.child('friends').child($to).child(auth.uid).exists()))",
