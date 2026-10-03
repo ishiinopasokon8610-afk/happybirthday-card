@@ -91,6 +91,7 @@ h1{animation:wig 5s ease-in-out infinite;transform-origin:0 100%}
 @keyframes wig{0%,100%{transform:rotate(0)}50%{transform:rotate(-1.4deg)}}
 #ban{background-size:220% 100%;animation:shine 3s linear infinite}
 @keyframes shine{to{background-position:-220% 0}}
+#ban.out{opacity:0;transform:translateY(-10px);transition:opacity .4s,transform .4s}
 .btn,.row2,.bal{transition:transform .15s}.btn:active,.row2:active{transform:scale(.93)}
 dialog[open]{animation:dlgin .4s cubic-bezier(.2,1.3,.4,1)}dialog[open]::backdrop{animation:fadein .3s}
 @keyframes dlgin{from{opacity:0;transform:translateY(40px) scale(.9)}to{opacity:1;transform:none}}
@@ -130,6 +131,9 @@ dialog[open]{animation:dlgin .4s cubic-bezier(.2,1.3,.4,1)}dialog[open]::backdro
 @font-face{font-family:"F_zenmaru";font-weight:900;src:url("fonts/zenmaru-black.woff2") format("woff2");font-display:swap}
 #wb{position:fixed;right:calc(96px + env(safe-area-inset-right,0px));bottom:calc(26px + env(safe-area-inset-bottom,0px));z-index:65;height:52px;padding:0 1.3em;white-space:nowrap;box-shadow:0 4px 14px #0004}
 #cl{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
+.bl{display:inline-flex;align-items:center;gap:8px}.bi{display:inline-flex;align-items:center;justify-content:center;flex:none;width:26px;height:26px;border-radius:50%;background:#fff}.bi svg{width:18px;height:18px;display:block}.bi.ln{border-radius:7px}.bi.ln svg,.bi.ln img{width:26px;height:26px;display:block;border-radius:6px;object-fit:cover}
+.bd0{font-weight:700;color:var(--acc2);font-size:15px}
+.sts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}.sts>div{background:var(--tint);border-radius:12px;padding:8px 10px;text-align:center}.sts b{display:block;font-size:24px;line-height:1.3;color:var(--acc2)}.sts small{color:var(--sub);font-size:12px}
 .gbc{position:absolute;top:-6px;right:-6px;background:var(--acc);color:#fff;border-radius:999px;font-size:12px;font-weight:700;padding:1px 7px}
 
 :root[data-theme=dark]{--bg:#0f1a14;--fg:#e4f1e9;--sub:#8fae9d;--card:#17261e;--line:#2b4338;--acc2:#7fdca8;--tint:#1d3328;--inp:#0f1a14;--warnbg:#3a2a12;--warnbd:#8a6020;--warnfg:#ffcf8a;color-scheme:dark}
@@ -157,7 +161,7 @@ a.btn{display:inline-block;text-decoration:none;text-align:center}
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,onAuthStateChanged,signOut,signInWithCustomToken,getAdditionalUserInfo,signInAnonymously,getRedirectResult} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import {getFunctions,httpsCallable} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-functions.js";
-import {getDatabase,ref,get,set,push,remove,onValue,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import {getDatabase,ref,get,set,push,remove,onValue,serverTimestamp,runTransaction} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 
 // Firebaseコンソール → プロジェクトの設定 → Cloud Messaging → ウェブ プッシュ証明書 で作ったキーペアの「公開キー」を貼る
@@ -204,14 +208,14 @@ const btn=(l,f,c='btn s')=>h('button',{class:c,onclick:f},l);
 const okP=p=>p&&p.m>=1&&p.m<=12&&p.d>=1&&p.d<=31;
 const notifOn=()=>{try{return localStorage.getItem('notif')==='1'&&Notification.permission==='granted'}catch(e){return false}};
 
-let me=null,prof=null,friends=[],priv=[],walls={},cnt={},wsubs={},subs=[],cur=null,seen={},drawn=new Set(),partyDone=false,loading=true,slow=false,loadErr=false,started=false,hint=null,hintBusy=false,xferUn=null,nameOnly=false;
+let banKey='',banOff=false,banT=null,stats={},statsEl=null,me=null,prof=null,friends=[],priv=[],walls={},cnt={},wsubs={},subs=[],cur=null,seen={},drawn=new Set(),partyDone=false,loading=true,slow=false,loadErr=false,started=false,hint=null,hintBusy=false,xferUn=null,nameOnly=false;
 try{const q=new URLSearchParams(location.search).get('add');if(q)sessionStorage.setItem('add',q)}catch(e){}
 
 function show(t,...c){cur=null;$('#dt').textContent=t;$('#db').replaceChildren(...c.flat().filter(x=>x!=null&&x!==false));if(!$('#dlg').open)$('#dlg').showModal()}
 $('#dx').onclick=()=>$('#dlg').close();
 function ask(t,b,yl,fn){show(t,h('p',{},b),h('div',{class:'row'},btn('キャンセル',()=>$('#dlg').close(),'btn s ghost'),btn(yl,()=>{$('#dlg').close();fn()})))}
 let curFull=null;
-const refresh=()=>{render();if($('#dlg').open&&cur)cur();if(curFull&&$('#cl'))curFull()};
+const refresh=()=>{render();if($('#dlg').open&&cur)cur();if(curFull&&$('#cl'))curFull();if(statsEl&&statsEl.isConnected)paintStats(statsEl)};
 
 function qr(text,px){
   try{const q=qrcode(0,'L');q.addData(text);q.make();const n=q.getModuleCount(),s=Math.max(2,Math.floor(px/(n+8))),m=4*s,c=h('canvas');
@@ -278,6 +282,7 @@ function start(){
     rebuild();refresh();
   });
   on('private/'+uid,s=>{priv=list(s,'p',uid);notice(priv,'p');refresh()});
+  on('stats/'+uid,s=>{stats=s.val()||{};refresh()});
   on('settings/'+uid+'/font',s=>{const k=s.val();if(k&&FONTS[k]&&k!==curFont()){setFont(k);render()}});
   on('settings/'+uid+'/theme',s=>{const k=s.val();
     if(k==='dark'||k==='light'){if(k!==curTheme())applyTheme(k,true)}
@@ -352,8 +357,22 @@ const callFn=n=>httpsCallable(getFunctions(app,'asia-northeast1'),n);
 const fnErr=e=>{const m=(e&&e.message)||'';return /[\u3040-\u30ff\u4e00-\u9fff]/.test(m)?m:'いまサーバーにつながりません。しばらくしてからもう一度試してね。（'+(m||(e&&e.code)||'error')+'）'};
 const hr=()=>h('hr',{style:'border:0;border-top:1px solid var(--line);margin:16px 0'});
 async function doLogout(){try{const d=localStorage.getItem('dev');if(d)await remove(ref(db,`tokens/${me.uid}/${d}`));localStorage.removeItem('notif')}catch(e){}setKnown(false);signOut(auth)}
+function cntAll(){
+  const rec=[...(walls[me.uid]||[]),...priv];let sb=0,sc=0;
+  Object.keys(walls).forEach(id=>{if(id===me.uid)return;(walls[id]||[]).forEach(c=>{if(c.from===me.uid){sb++;if(c.bg!=='bal')sc++}})});
+  const sp=stats.sp|0;
+  return{sc:sc+sp,sb:sb+sp,rc:rec.filter(c=>c.bg!=='bal').length,rb:rec.length};
+}
+function paintStats(el){
+  const n=cntAll();
+  el.replaceChildren(...[['送ったカード',n.sc,'枚'],['送った風船',n.sb,'個'],['届いたカード',n.rc,'枚'],['届いた風船',n.rb,'個']].map(([l,v,u])=>h('div',{},h('small',{},l),h('b',{},v+u))));
+}
+function statsBlock(){statsEl=h('div',{class:'sts'});paintStats(statsEl);return statsEl}
 function advanced(){
   show('詳細設定',
+    h('b',{},'これまでの記録'),
+    statsBlock(),
+    h('p',{class:'note'},'※風船の数には、カードの風船も含みます。友だちに送った公開カードは、これまでの分も数えます。非公開カードは、この機能を入れたあとに送った分から数えます。'),hr(),
     h('b',{},'メールでお知らせ'),
     h('p',{class:'note'},'①カードが届いたとき ②自分や友だちの誕生日の朝（自分の分は、届いたメッセージの内容つき）にメールします。端末の通知が使えない人もこちらで受け取れます。'),
     mailBox(),hr(),
@@ -462,6 +481,14 @@ async function claimRun(code){
 }
 
 // ---- 画面 ----
+const G_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.46a5.52 5.52 0 0 1-2.4 3.62v3h3.88c2.27-2.09 3.58-5.17 3.58-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.88-3c-1.07.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.09C3.25 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.56.37-2.28V6.63H1.27A11.99 11.99 0 0 0 0 12c0 1.94.46 3.77 1.27 5.37l4-3.09z"/><path fill="#EA4335" d="M12 4.76c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.27 6.63l4 3.09C6.22 6.87 8.87 4.76 12 4.76z"/></svg>';
+const L_SVG='<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#06c755"/><path fill="#fff" d="M16 6.5c-5.8 0-10.5 3.7-10.5 8.3 0 4.1 3.7 7.5 8.7 8.2.3.1.8.2.9.5.1.3.1.7 0 1l-.1.9c0 .3-.2 1 .9.6s5.8-3.4 7.9-5.8c1.5-1.6 2.2-3.2 2.2-5.4 0-4.6-4.7-8.3-10.5-8.3z"/><text x="16" y="17.6" text-anchor="middle" font-size="5.4" font-weight="800" font-family="Arial,Helvetica,sans-serif" fill="#06c755">LINE</text></svg>';
+const withIcon=(svg,text,cls)=>{const i=h('span',{class:'bi'+(cls?' '+cls:'')});i.innerHTML=svg;return h('span',{class:'bl'},i,text)};
+const LINE_IMG='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTLPMRWt1hjM_u207yDvwk0Rawtfvjw3-xswVdBCP3vDw&s=10';
+const lineLabel=()=>{ // 指定の画像を使い、読み込めなかったら内蔵のロゴに切り替える
+  const i=h('span',{class:'bi ln'}),im=h('img',{src:LINE_IMG,alt:'',width:26,height:26,referrerpolicy:'no-referrer'});
+  im.onerror=()=>{i.innerHTML=L_SVG};i.append(im);return h('span',{class:'bl'},i,'LINEでログイン');
+};
 const isLine=/Line\//i.test(navigator.userAgent);
 const inApp=/Line\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(navigator.userAgent);
 function known(){try{return localStorage.getItem('known')==='1'}catch(e){return false}}
@@ -495,7 +522,7 @@ function loginBox(){
     h('p',{class:'warn'},'🔒 名前はフルネームを使わないでね。下の名前かニックネームだけにしてください。'),
     h('p',{},'GoogleまたはLINEでログインして、友だちと誕生日カードを送り合おう。'),
     isLine?h('p',{class:'warn'},'LINEのブラウザで開いている場合は、必ず「LINEでログイン」を押してください。（Googleではログインできません）'):inApp&&h('p',{class:'note'},'このアプリ内ブラウザではGoogleログインできないことがあります。右上のメニューから「ブラウザで開く」を選んでね。'),
-    h('div',{class:'row'},btn('Googleでログイン',async()=>{
+    h('div',{class:'row'},btn(withIcon(G_SVG,'Googleでログイン'),async()=>{
       const p=new GoogleAuthProvider();if(GOOGLE_BIRTHDAY)p.addScope('https://www.googleapis.com/auth/user.birthday.read');
       loading=true;slow=false;setKnown(true);msg('');render();slowTimer();
       try{await afterGoogle(await signInWithPopup(auth,p))}
@@ -504,7 +531,7 @@ function loginBox(){
         loading=false;setKnown(false);render();
         if(!['auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(e.code))msg('ログインできませんでした（'+(e.code||'')+'）');
       }
-    },'btn'),btn('LINEでログイン',lineLogin,'btn line'+(isLine?' first':''))),
+    },'btn'),btn(lineLabel(),lineLogin,'btn line'+(isLine?' first':''))),
     h('div',{class:'row'},btn('GoogleもLINEも持っていない人はこちら',anonLogin,'btn ghost'),btn('復元コードで続きから',recoverDlg,'btn ghost')),
     h('p',{class:'note'},'こちらは、下の名前（フルネームNG）と誕生日を入力して始めます。登録のあとに「復元コード」が出るので、控えておいてね。ログアウトしたり、端末のデータを消したりしても、そのコードで続きから使えます。'));
 }
@@ -655,6 +682,7 @@ async function sendCard(f,priv,t,bg,bl){
   await set(r,{from:me.uid,fromNm:prof.nm,bg,bl,y:nxt(f).y,ts:serverTimestamp(),ot:openAt(f)});
   if(t!=null)try{await set(ref(db,(priv?'privbody/':'body/')+f.id+'/'+r.key),{t})}
   catch(e){try{await remove(r)}catch(_){}throw e}
+  if(priv)runTransaction(ref(db,`stats/${me.uid}/sp`),v=>(v||0)+1).catch(()=>{});
 }
 async function sendBalloon(f,b){
   b.disabled=true;
@@ -731,7 +759,11 @@ function render(){
   if(!prof){A.append(profForm(false));return}
   const my=nxt(prof),fl=friends.map(p=>({...p,...nxt(p)})).sort((a,b)=>a.dd-b.dd),td=[...(my.dd===0?['あなた']:[]),...fl.filter(p=>p.dd===0).map(p=>p.nm+'さん')];
   if(my.dd===0&&!partyDone){partyDone=true;party()}
-  if(td.length)A.append(h('div',{id:'ban'},'今日は '+td.join('、')+' の誕生日！'));
+  if(td.length){
+    const bt='今日は '+td.join('、')+' の誕生日！';
+    if(bt!==banKey){banKey=bt;banOff=false;clearTimeout(banT);banT=setTimeout(()=>{banOff=true;const e=$('#ban');if(e){e.classList.add('out');setTimeout(()=>e.remove(),450)}},5000)}
+    if(!banOff)A.append(h('div',{id:'ban'},bt));
+  }
   A.append(h('div',{class:'box mine'},icon(()=>inbox(),'わたしのカード'),
     h('div',{class:'g'},h('b',{},prof.nm),h('div',{class:'note'},prof.m+'月'+prof.d+'日 ・ '+(my.dd===0?'今日が誕生日！':'あと'+my.dd+'日')),h('div',{},'届いたカード '+Math.max((cnt[me.uid+'w']||0)+(cnt[me.uid+'p']||0),(walls[me.uid]||[]).length+priv.length)+'枚')),
     btn('✉ カード',()=>inbox()),btn('編集',()=>show('プロフィール編集',profForm(true)))));
@@ -741,7 +773,7 @@ function render(){
   fl.forEach(p=>{
     const n=Math.max(cnt[p.id+'w']||0,(walls[p.id]||[]).filter(c=>c.y===p.y).length);
     A.append(h('div',{class:'row2'},icon(()=>pickYear(p),p.nm+'さんのカード'),
-      h('div',{class:'g'},h('b',{},p.nm),h('div',{class:'note'},p.m+'月'+p.d+'日 ・ '+(p.dd===0?'今日！':'あと'+p.dd+'日')),h('div',{class:'note'},'風船 '+n+'個')),
+      h('div',{class:'g'},h('b',{},p.nm),p.dd===0&&h('div',{class:'bd0'},'今日が誕生日❕✨'),h('div',{class:'note'},p.m+'月'+p.d+'日 ・ '+(p.dd===0?'今日！':'あと'+p.dd+'日')),h('div',{class:'note'},'風船 '+n+'個')),
       btn('📖 カード',()=>pickYear(p)),
       h('button',{class:'x2',onclick:()=>ask('友だちを解除','「'+p.nm+'」さんとの友だちを解除します。お互いの誕生日と風船が見えなくなります。よろしいですか？','解除する',async()=>{try{await remove(ref(db,`friends/${me.uid}/${p.id}`));await remove(ref(db,`friends/${p.id}/${me.uid}`))}catch(e){msg('解除できませんでした。')}})},'解除')));
   });
@@ -771,7 +803,7 @@ async function loadProfile(u){
   if(prof&&me&&me.uid===u.uid)setTimeout(()=>{if(!$('#dlg').open)askNotifOnce()},800);
 }
 onAuthStateChanged(auth,u=>{
-  subs.forEach(f=>f());subs=[];Object.values(wsubs).forEach(f=>f());wsubs={};walls={};cnt={};seen={};dropBodies();
+  subs.forEach(f=>f());subs=[];Object.values(wsubs).forEach(f=>f());wsubs={};walls={};cnt={};seen={};stats={};dropBodies();
   if(xferUn){xferUn();xferUn=null}
   me=u;nameOnly=!!u&&u.isAnonymous;prof=null;friends=[];priv=[];started=false;loadErr=false;
   if(!u){loading=lineBusy;render();return}

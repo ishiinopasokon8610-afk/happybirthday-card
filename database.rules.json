@@ -1,0 +1,198 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "profiles": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('friends').child($uid).child(auth.uid).exists())",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['nm','m','d'])",
+        "nm": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 20"
+        },
+        "m": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 12"
+        },
+        "d": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 31"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "friends": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$fid": {
+          ".write": "auth != null && (auth.uid === $uid || auth.uid === $fid)",
+          ".validate": "newData.val() === true"
+        }
+      }
+    },
+    "tokens": {
+      "$uid": {
+        "$dev": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.isString() && newData.val().length < 500"
+        }
+      }
+    },
+    "notify": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['em','on'])",
+        "em": {
+          ".validate": "newData.isString() && newData.val().length <= 100"
+        },
+        "on": {
+          ".validate": "newData.isBoolean()"
+        },
+        "ts": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "settings": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "font": {
+          ".validate": "newData.isString() && newData.val().length <= 10"
+        },
+        "theme": {
+          ".validate": "newData.isString() && (newData.val() === 'dark' || newData.val() === 'light')"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "stats": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "sp": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "private": {
+      "$to": {
+        ".indexOn": ["from"],
+        ".read": "auth != null && auth.uid === $to",
+        "$id": {
+          ".write": "auth != null && ((!data.exists() && root.child('friends').child($to).child(auth.uid).exists()) || (data.exists() && !newData.exists() && data.child('from').val() === auth.uid && now - data.child('ts').val() < 60000))",
+          ".validate": "newData.hasChildren(['from','fromNm','bg','bl','y','ts','ot']) && newData.child('from').val() === auth.uid && newData.child('fromNm').val() === root.child('profiles').child(auth.uid).child('nm').val() && newData.child('ot').val() >= now - 86400000 && newData.child('ot').val() <= now + 691200000",
+          "from": {
+            ".validate": "newData.isString()"
+          },
+          "fromNm": {
+            ".validate": "newData.isString() && newData.val().length <= 20"
+          },
+          "bg": {
+            ".validate": "newData.isString() && newData.val().length <= 3"
+          },
+          "bl": {
+            ".validate": "newData.isNumber()"
+          },
+          "y": {
+            ".validate": "newData.isNumber()"
+          },
+          "ts": {
+            ".validate": "newData.isNumber() && newData.val() === now"
+          },
+          "ot": {
+            ".validate": "newData.isNumber()"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "wall": {
+      "$to": {
+        ".indexOn": ["from"],
+        ".read": "auth != null && (auth.uid === $to || root.child('friends').child($to).child(auth.uid).exists())",
+        "$id": {
+          ".write": "auth != null && ((data.exists() && !newData.exists() && data.child('from').val() === auth.uid) || (!data.exists() && root.child('friends').child($to).child(auth.uid).exists()))",
+          ".validate": "newData.hasChildren(['from','fromNm','bg','bl','y','ts','ot']) && newData.child('from').val() === auth.uid && newData.child('fromNm').val() === root.child('profiles').child(auth.uid).child('nm').val() && newData.child('ot').val() >= now - 86400000 && newData.child('ot').val() <= now + 691200000",
+          "from": {
+            ".validate": "newData.isString()"
+          },
+          "fromNm": {
+            ".validate": "newData.isString() && newData.val().length <= 20"
+          },
+          "bg": {
+            ".validate": "newData.isString() && newData.val().length <= 3"
+          },
+          "bl": {
+            ".validate": "newData.isNumber()"
+          },
+          "y": {
+            ".validate": "newData.isNumber()"
+          },
+          "ts": {
+            ".validate": "newData.isNumber() && newData.val() === now"
+          },
+          "ot": {
+            ".validate": "newData.isNumber()"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "privbody": {
+      "$to": {
+        "$id": {
+          ".read": "auth != null && auth.uid === $to && now >= root.child('private').child($to).child($id).child('ot').val()",
+          ".write": "auth != null && root.child('private').child($to).child($id).child('from').val() === auth.uid",
+          ".validate": "newData.hasChildren(['t'])",
+          "t": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 300"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "body": {
+      "$to": {
+        "$id": {
+          ".read": "auth != null && (auth.uid === $to || root.child('friends').child($to).child(auth.uid).exists()) && now >= root.child('wall').child($to).child($id).child('ot').val()",
+          ".write": "auth != null && root.child('wall').child($to).child($id).child('from').val() === auth.uid",
+          ".validate": "newData.hasChildren(['t'])",
+          "t": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 300"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "balloons": {
+      "$to": {
+        "$y": {
+          "w": {
+            ".read": "auth != null && (auth.uid === $to || root.child('friends').child($to).child(auth.uid).exists())"
+          },
+          "p": {
+            ".read": "auth != null && auth.uid === $to"
+          }
+        }
+      }
+    }
+  }
+}
