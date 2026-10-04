@@ -369,6 +369,7 @@ function start(){
     if(first)localRd().forEach(saveRd); // この端末にだけ残っていた記録をFirebaseへ移す
     refresh();
   },()=>{rdLoaded=true;refresh()}));
+  subs.push(onValue(ref(db,'celebrate/'+uid),s=>{cel=s.val()||{};celLoaded=true;refresh()},()=>{celLoaded=true;refresh()}));
   on('settings/'+uid+'/font',s=>{const k=s.val();if(k&&FONTS[k]&&k!==curFont()){setFont(k);render()}});
   on('settings/'+uid+'/theme',s=>{const k=s.val();
     if(k==='dark'||k==='light'){if(k!==curTheme())applyTheme(k,true)}
@@ -972,7 +973,7 @@ const lineInviteBtn=()=>h('a',{class:'btn line',href:lineInviteUrl(),target:'_bl
 // ---- 届いたカードを「めくった」記録（この端末に保存） ----
 const rdKey=()=>'rd_'+(me?me.uid:'');
 // 正本はFirebase（reads/{uid}/{カードID}）。端末の記録は予備で、前の版でめくった分もここから自動でFirebaseへ移す
-let rdSrv=new Set(),rdLoaded=false;
+let rdSrv=new Set(),rdLoaded=false,cel={},celLoaded=false; // cel：お祝いの記録（Firebase: celebrate/{uid}/{年}）
 const localRd=()=>{try{return JSON.parse(localStorage.getItem(rdKey()))||[]}catch(e){return []}};
 const readSet=()=>new Set([...rdSrv,...localRd()]);
 const saveRd=id=>{if(!me||rdSrv.has(id))return;rdSrv.add(id);const u=me.uid;set(ref(db,`reads/${u}/${id}`),true).catch(()=>{if(me&&me.uid===u)rdSrv.delete(id)})};
@@ -1179,8 +1180,16 @@ const OMI_LV=['大吉','大吉','中吉','中吉','小吉'];
 const OMI_MSG=['ずっと気になっていたことを、ひとつ始めてみよう。','「ありがとう」を言われる場面が、いつもより多い1年になるよ。','小さな寄り道が、すてきな出会いにつながるよ。','今日の自分を、まず自分でほめてあげてね。','食べたいものを食べると、運がのびるよ。','連絡を迷っていた人に、ひとこと送ってみて。','やりたいと思ったことは、思ったより早くかなうよ。','笑った数だけ、来年の運が増えていくよ。'];
 const OMI_COL=[['ピンク','#f48fb1'],['みずいろ','#81d4fa'],['きいろ','#ffe066'],['みどり','#81c995'],['むらさき','#b39ddb'],['オレンジ','#ffb74d']];
 const OMI_ITEM=['あたたかい飲みもの','お気に入りのペン','ハンカチ','ちいさなお菓子','イヤホン','手帳','お花','ノート'];
-// おみくじは「今年の誕生日」ごとに1つ決まる（何回引いても同じ。データは保存しない）
-function omikuji(){const s=me.uid+':'+nxt(prof).y,pk=(a,k)=>a[hash(s+k)%a.length];return{lv:pk(OMI_LV,'l'),msg:pk(OMI_MSG,'m'),col:pk(OMI_COL,'c'),item:pk(OMI_ITEM,'i')}}
+// おみくじは「今年の誕生日」ごとに1つ決まり、結果はFirebase（celebrate/{uid}/{年}/omi）に保存する
+const celY=()=>String(nxt(prof).y);
+function celSet(y,k,v){const u=me.uid;(cel[y]=cel[y]||{})[k]=v;set(ref(db,`celebrate/${u}/${y}/${k}`),v).catch(()=>{})}
+function omikuji(){
+  const y=celY(),sv=cel[y]&&cel[y].omi;
+  if(sv&&sv.lv)return{lv:sv.lv,msg:sv.msg,col:[sv.cn,sv.cc],item:sv.it};
+  const sd=me.uid+':'+y,pk=(a,k)=>a[hash(sd+k)%a.length],r={lv:pk(OMI_LV,'l'),msg:pk(OMI_MSG,'m'),col:pk(OMI_COL,'c'),item:pk(OMI_ITEM,'i')};
+  if(celLoaded)celSet(y,'omi',{lv:r.lv,msg:r.msg,cn:r.col[0],cc:r.col[1],it:r.item});
+  return r;
+}
 const CANDLE=['#f48fb1','#81d4fa','#ffe066','#81c995','#b39ddb'],CX=[62,86,110,134,158];
 const cakeSVG=()=>'<svg viewBox="0 0 220 190" role="img" aria-label="バースデーケーキ">'
   +'<ellipse cx="110" cy="168" rx="104" ry="11" fill="#d9d2c5"/>'
@@ -1231,10 +1240,18 @@ function cakeDlg(){
   show(my.dd===0?'🎂 '+prof.nm+'さん、おめでとう！':'🎂 バースデーケーキ',cake,note,act,res);
   $('#dlg').addEventListener('close',stop,{once:true});
 }
-// 自分の誕生日に初めて開いたとき、その年に1回だけケーキを自動で出す
+// 自分の誕生日に初めて開いたとき、その年に1回だけケーキを自動で出す（出したことはFirebaseに保存。別の端末でも、もう出ない）
 function autoCake(){
-  const k='cake_'+me.uid+'_'+nxt(prof).y;try{if(localStorage.getItem(k))return}catch(e){return}
-  setTimeout(()=>{if(!me||!prof||$('#dlg').open||$('#cl'))return;try{localStorage.setItem(k,'1')}catch(e){return}cakeDlg()},2600);
+  const u=me.uid,y=celY(),k='cake_'+u+'_'+y;let tries=0;
+  const go=()=>{
+    if(!me||me.uid!==u||!prof)return;
+    if(!celLoaded&&tries++<8){setTimeout(go,1500);return} // Firebaseの記録が届くまで少し待つ
+    let seen=!!(cel[y]&&cel[y].cake);try{if(localStorage.getItem(k))seen=true}catch(e){}
+    if(seen||$('#dlg').open||$('#cl'))return;
+    try{localStorage.setItem(k,'1')}catch(e){}
+    celSet(y,'cake',true);cakeDlg();
+  };
+  setTimeout(go,2600);
 }
 
 // ---- 誕生日までのカウントダウン（楽しみになる） ----
@@ -1372,7 +1389,7 @@ async function loadProfile(u){
 onAuthStateChanged(auth,u=>{
   subs.forEach(f=>f());subs=[];Object.values(wsubs).forEach(f=>f());wsubs={};walls={};cnt={};seen={};stats={};sentPriv={};dropBodies();
   if(xferUn){xferUn();xferUn=null}
-  me=u;nameOnly=!!u&&u.isAnonymous;linePic='';claimsDone=false;rdSrv=new Set();rdLoaded=false;prof=null;friends=[];priv=[];started=false;loadErr=false;
+  me=u;nameOnly=!!u&&u.isAnonymous;linePic='';claimsDone=false;rdSrv=new Set();rdLoaded=false;cel={};celLoaded=false;prof=null;friends=[];priv=[];started=false;loadErr=false;
   if(!u){loading=lineBusy;render();return}
   u.getIdTokenResult().then(t=>{if(me!==u)return;if(t.claims.rec===true)nameOnly=true;linePic=typeof t.claims.pic==='string'?t.claims.pic:''}).catch(()=>{})
     .then(()=>{if(me===u){claimsDone=true;syncPhoto();if(prof)render()}});

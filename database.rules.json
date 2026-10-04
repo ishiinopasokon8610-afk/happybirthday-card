@@ -70,6 +70,9 @@
         "theme": {
           ".validate": "newData.isString() && (newData.val() === 'dark' || newData.val() === 'light')"
         },
+        "np": {
+          ".validate": "newData.isBoolean()"
+        },
         "$other": {
           ".validate": false
         }
@@ -219,6 +222,41 @@
         "$id": {
           ".write": "auth != null && auth.uid === $uid",
           ".validate": "newData.val() === true"
+        }
+      }
+    },
+    "celebrate": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$year": {
+          ".write": "auth != null && auth.uid === $uid && $year.matches(/^20[0-9][0-9]$/)",
+          "cake": {
+            ".validate": "newData.isBoolean()"
+          },
+          "omi": {
+            ".validate": "newData.hasChildren(['lv','msg','cn','cc','it'])",
+            "lv": {
+              ".validate": "newData.isString() && newData.val().length <= 4"
+            },
+            "msg": {
+              ".validate": "newData.isString() && newData.val().length <= 80"
+            },
+            "cn": {
+              ".validate": "newData.isString() && newData.val().length <= 10"
+            },
+            "cc": {
+              ".validate": "newData.isString() && newData.val().matches(/^#[0-9a-fA-F]{6}$/)"
+            },
+            "it": {
+              ".validate": "newData.isString() && newData.val().length <= 20"
+            },
+            "$other": {
+              ".validate": false
+            }
+          },
+          "$other": {
+            ".validate": false
+          }
         }
       }
     }
