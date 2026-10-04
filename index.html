@@ -18,7 +18,16 @@
 body{margin:0;background:var(--bg);color:var(--fg);font-size:16px;line-height:1.6;font-family:var(--ff)}
 main{max-width:640px;margin:0 auto;padding:16px}
 h1{font-size:22px;margin:0 0 4px;color:var(--acc2)}h2{font-size:17px;margin:20px 0 4px;color:var(--acc2)}
-.note{color:var(--sub);font-size:14px;margin:4px 0}
+.note{color:var(--sub);font-size:14px;margin:4px 0}.note:empty{display:none}.fc{font-size:13px;font-weight:400;color:var(--sub);margin-left:10px}
+.cake{position:relative;overflow:hidden;width:min(100%,300px);margin:0 auto}.cake svg{width:100%;height:auto;display:block}
+.cd{cursor:pointer}.fl{transform-box:fill-box;transform-origin:50% 100%;animation:flk .5s ease-in-out infinite alternate}.cd.off .fl{display:none}
+@keyframes flk{from{transform:scale(1,1) rotate(-3deg)}to{transform:scale(.88,1.12) rotate(3deg)}}
+.cf{position:absolute;top:-30px;pointer-events:none;animation:cff 2.2s ease-in forwards}@keyframes cff{to{transform:translate(var(--x),270px) rotate(300deg);opacity:0}}
+.pf{position:absolute;pointer-events:none;transform:translate(-50%,0);animation:pfl .9s ease-out forwards}@keyframes pfl{to{opacity:0;transform:translate(-50%,-44px) scale(1.5)}}
+@media (prefers-reduced-motion:reduce){.fl{animation:none}.cf,.pf{display:none}}
+.omi{text-align:center;background:var(--tint);border-radius:14px;padding:12px;margin-top:10px}.omi .ol{font-size:34px;font-weight:700;color:var(--acc2);line-height:1.3}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-2px;margin-right:4px;border:1px solid var(--line)}.soon .row{margin:6px 0}
+.cdw{text-align:center}.cdw .cdn{font-size:15px;color:var(--sub)}.cdw .cdn b{font-size:46px;line-height:1.1;color:var(--acc2);margin:0 4px}.pg{height:10px;border-radius:999px;background:var(--tint);overflow:hidden;margin:8px 0 4px}.pg i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--acc),#7cc99a)}.cdw p{margin:6px 0}
 .box,.row2{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:12px 0}
 .row2{display:flex;align-items:center;gap:8px;margin:8px 0}
 .mine{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -192,7 +201,7 @@ a.btn{display:inline-block;text-decoration:none;text-align:center}
 </dialog>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,onAuthStateChanged,signOut,signInWithCustomToken,getAdditionalUserInfo,signInAnonymously,getRedirectResult} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,onAuthStateChanged,signOut,signInWithCustomToken,getAdditionalUserInfo,signInAnonymously,getRedirectResult,reauthenticateWithPopup} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import {getFunctions,httpsCallable} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-functions.js";
 import {getDatabase,ref,get,set,push,remove,onValue,serverTimestamp,runTransaction,query,orderByChild,equalTo} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
@@ -259,7 +268,8 @@ const PERSON='<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20
 function avatar(url,px){
   const a=h('span',{class:'av',style:`width:${px}px;height:${px}px`});
   const fb=()=>{a.innerHTML=PERSON};
-  if(okPh(url)){const im=h('img',{src:url,alt:'',referrerpolicy:'no-referrer',loading:'lazy',width:px,height:px});im.onerror=fb;a.append(im)}else fb();
+  const bad=avatar.bad||(avatar.bad=new Set());
+  if(okPh(url)&&!bad.has(url)){const im=h('img',{src:url,alt:'',referrerpolicy:'no-referrer',loading:'lazy',width:px,height:px});im.onerror=()=>{bad.add(url);fb()};a.append(im)}else fb();
   return a;
 }
 const ENV=`<svg viewBox="0 0 300 300" aria-hidden="true"><rect x="0" y="120" width="300" height="170" fill="#e3b53c"/><g class="pl"><g fill="#1d6b34"><ellipse cx="90" cy="110" rx="16" ry="58" transform="rotate(-28 90 110)"/><ellipse cx="210" cy="110" rx="16" ry="58" transform="rotate(28 210 110)"/><ellipse cx="150" cy="80" rx="20" ry="78"/></g><g fill="#2f8f47"><ellipse cx="60" cy="140" rx="12" ry="46" transform="rotate(-50 60 140)"/><ellipse cx="240" cy="140" rx="12" ry="46" transform="rotate(50 240 140)"/><ellipse cx="120" cy="100" rx="13" ry="55" transform="rotate(-12 120 100)"/><ellipse cx="180" cy="100" rx="13" ry="55" transform="rotate(12 180 100)"/></g><g stroke="#2f8f47" stroke-width="4"><path d="M55 110v70M245 110v70M120 50v60"/></g><path d="M40 62l8 8 8-12 8 12 8-8v26q0 14-16 14t-16-14z" fill="#e0405e"/><path d="M230 52l8 8 8-12 8 12 8-8v26q0 14-16 14t-16-14z" fill="#e0405e"/><g fill="#fff"><circle cx="120" cy="26" r="9"/><circle cx="132" cy="36" r="9"/><circle cx="108" cy="36" r="9"/><circle cx="114" cy="50" r="9"/><circle cx="126" cy="50" r="9"/></g><circle cx="120" cy="38" r="6" fill="#f4c542"/></g><polygon points="0,120 150,205 300,120 300,290 0,290" fill="#f2cb55"/><path d="M0 290L110 200M300 290L190 200" stroke="#d9a92f" fill="none" stroke-width="2"/></svg>`;
@@ -284,7 +294,8 @@ function show(t,...c){cur=null;$('#dt').textContent=t;$('#db').replaceChildren(.
 $('#dx').onclick=()=>$('#dlg').close();
 function ask(t,b,yl,fn){show(t,h('p',{},b),h('div',{class:'row'},btn('キャンセル',()=>$('#dlg').close(),'btn s ghost'),btn(yl,()=>{$('#dlg').close();fn()})))}
 let curFull=null;
-const refresh=()=>{render();if($('#dlg').open&&cur)cur();if(curFull&&$('#cl'))curFull();if(statsEl&&statsEl.isConnected)paintStats(statsEl)};
+let rfT=0; // データが続けて届いても、少し待ってまとめて1回だけ描き直す（点滅防止）
+const refresh=()=>{if(rfT)return;rfT=setTimeout(()=>{rfT=0;render();if($('#dlg').open&&cur)cur();if(curFull&&$('#cl'))curFull();if(statsEl&&statsEl.isConnected)paintStats(statsEl)},80)};
 
 function qr(text,px){
   try{const q=qrcode(0,'L');q.addData(text);q.make();const n=q.getModuleCount(),s=Math.max(2,Math.floor(px/(n+8))),m=4*s,c=h('canvas');
@@ -362,6 +373,10 @@ function start(){
   on('settings/'+uid+'/theme',s=>{const k=s.val();
     if(k==='dark'||k==='light'){if(k!==curTheme())applyTheme(k,true)}
     else{try{const l=localStorage.getItem('theme');if(l==='dark'||l==='light')set(ref(db,`settings/${uid}/theme`),l).catch(()=>{})}catch(e){}}});
+  let npTry=false;
+  on('settings/'+uid+'/np',s=>{const v=s.val();
+    if(typeof v==='boolean'){if(v!==hidePh()){try{localStorage.setItem('np_'+uid,v?'1':'0')}catch(e){}syncPhoto();render()}}
+    else if(!npTry){npTry=true;try{const l=localStorage.getItem('np_'+uid);if(l==='1'||l==='0')set(ref(db,`settings/${uid}/np`),l==='1').catch(()=>{})}catch(e){}}});
   pend();refreshTok();
 }
 async function pend(){
@@ -578,16 +593,31 @@ const slowTimer=()=>setTimeout(()=>{if(loading){slow=true;render()}},10000);
 const GOOGLE_BIRTHDAY=true; // falseにするとGoogleから誕生日を取らない（確認画面が簡単になる）
 const noSp=v=>!/[\s\u3000]/.test(v);
 async function googleInfo(r){
-  const o={nm:'',m:0,d:0};
+  const o={nm:'',m:0,d:0,err:''};
   try{const pf=(getAdditionalUserInfo(r)||{}).profile||{};if(pf.given_name)o.nm=String(pf.given_name).slice(0,20)}catch(e){}
   if(GOOGLE_BIRTHDAY){try{
-    const tk=GoogleAuthProvider.credentialFromResult(r).accessToken;
-    const j=await(await fetch('https://people.googleapis.com/v1/people/me?personFields=birthdays',{headers:{Authorization:'Bearer '+tk}})).json();
-    const b=(j.birthdays||[]).map(x=>x.date).find(x=>x&&x.month&&x.day);
-    if(b){o.m=b.month;o.d=b.day}
-  }catch(e){}}
+    const cr=GoogleAuthProvider.credentialFromResult(r),tk=cr&&cr.accessToken;
+    if(!tk)o.err='ACCESS_TOKEN_SCOPE_INSUFFICIENT';
+    else{
+      const res=await fetch('https://people.googleapis.com/v1/people/me?personFields=birthdays',{headers:{Authorization:'Bearer '+tk}});
+      const j=await res.json().catch(()=>({}));
+      if(!res.ok||j.error){ // 失敗の理由を残す（以前は黙って無視していた）
+        const e=j.error||{},dt=(e.details||[]).find(x=>x&&x.reason);
+        o.err=(dt&&dt.reason)||e.status||('HTTP'+res.status);
+        try{console.warn('People API error',res.status,e)}catch(_){}
+      }else{
+        const b=(j.birthdays||[]).map(x=>x.date).find(x=>x&&x.month&&x.day);
+        if(b){o.m=b.month;o.d=b.day}else o.err='none';
+      }
+    }
+  }catch(e){o.err='network'}}
   return o;
 }
+const birthMsg=e=>e==='none'?'このGoogleアカウントに誕生日が登録されていないか、非公開のようです。Googleアカウントの「個人情報」で誕生日を登録するか、手入力してね。'
+  :e==='ACCESS_TOKEN_SCOPE_INSUFFICIENT'?'誕生日の取得が許可されていません。もう一度ボタンを押して、確認画面で「誕生日」の許可をオンにしてね。'
+  :e==='SERVICE_DISABLED'?'（管理者向け）Google CloudでPeople APIが有効になっていないため取得できません。有効にしてから、もう一度ボタンを押してね。'
+  :e==='network'?'通信できませんでした。電波を確認して、もう一度ボタンを押してね。'
+  :'Googleから誕生日を取得できませんでした（'+e+'）。手入力してね。';
 async function afterGoogle(r){
   try{if(r&&r.user&&!localStorage.getItem('prof_'+r.user.uid)){hintBusy=true;render();hint=await googleInfo(r)}}catch(e){}
   hintBusy=false;render();
@@ -600,6 +630,7 @@ function loginBox(){
   return h('div',{class:'box'},
     h('p',{class:'warn'},'🔒 名前はフルネームを使わないでね。下の名前かニックネームだけにしてください。'),
     h('p',{},'GoogleまたはLINEでログインして、友だちと誕生日カードを送り合おう。'),
+    GOOGLE_BIRTHDAY&&h('p',{class:'note'},'Googleでログインすると、確認画面に「誕生日」の許可が出ます。チェックを入れると誕生日が自動で入ります（入れなくても使えます。その場合は手入力してね）。'),
     (standalone()&&isIOS)&&h('p',{class:'note'},'ホーム画面のアプリでは、LINEログインの途中でSafariに切り替わり、アプリに戻れないことがあります。その場合は、Safariで開いてLINEログイン →「詳細設定」で引っ越しコードを作り、このアプリで「名前だけ」で始めて、登録画面の「前のアカウントから引き継ぐ」にコードを入れてね。'),
     isLine?h('p',{class:'warn'},'LINEのブラウザで開いている場合は、必ず「LINEでログイン」を押してください。（Googleではログインできません）'):inApp&&h('p',{class:'note'},'このアプリ内ブラウザではGoogleログインできないことがあります。右上のメニューから「ブラウザで開く」を選んでね。'),
     h('div',{class:'row'},btn(withIcon(G_SVG,'Googleでログイン'),async()=>{
@@ -631,9 +662,29 @@ function profForm(edit){
   nm=h('input',{placeholder:'下の名前（ニックネーム可）',maxlength:20,value:edit?prof.nm:((hint&&hint.nm)||(noSp(ln)?ln:'')).slice(0,20)}),
   bm=sel(12,!edit&&!hm),bd=sel(31,!edit&&!hm);
   if(edit){bm.value=prof.m;bd.value=prof.d}else if(hm){bm.value=hint.m;bd.value=hint.d}
+  let phRow=null;
+  if(edit){ // 写真があってもなくても、編集画面にはいつも表示する
+    const pv=h('span',{}),tb=h('button',{class:'btn s ghost'});
+    const paint=()=>{pv.replaceChildren(avatar(myAv(),44));tb.textContent=hidePh()?'📷 写真を表示する':'🚫 写真を表示しない';tb.disabled=!hidePh()&&!rawPh()};
+    tb.onclick=()=>{setHidePh(!hidePh());paint()};
+    paint();
+    phRow=h('div',{},h('div',{class:'row'},pv,tb),h('p',{class:'note'},(rawPh()||hidePh())?'「写真を表示しない」にすると、自分の画面でも友だちの画面でも人マークになります。':'いまは写真がないので、人マークが表示されています。写真のあるGoogle・LINEアカウントでは、ここで表示するかどうかを選べます。'));
+  }
+  const isG=!!me&&(me.providerData||[]).some(x=>x&&x.providerId==='google.com');
+  const gn=h('p',{class:'note'},(!edit&&hint&&hint.err)?birthMsg(hint.err):'');
+  const gb=(isG&&GOOGLE_BIRTHDAY)?btn('🎂 Googleから誕生日を取得',async()=>{
+    gb.disabled=true;gn.textContent='Googleに確認しています…';
+    try{
+      const p=new GoogleAuthProvider();p.addScope('https://www.googleapis.com/auth/user.birthday.read');
+      const o=await googleInfo(await reauthenticateWithPopup(me,p));
+      if(o.m&&o.d){bm.value=o.m;bd.value=o.d;gn.textContent='Googleから誕生日を取得しました。違っていたら直して、「保存」を押してね。'}
+      else gn.textContent=birthMsg(o.err||'none');
+    }catch(e){gn.textContent=['auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(e.code)?'':'取得できませんでした（'+(e.code||'')+'）。手入力してね。'}
+    gb.disabled=false;
+  },'btn s ghost'):null;
   return h('div',{class:'box'},h('b',{},edit?'プロフィール編集':'はじめに、自分のプロフィールを登録'),
     h('p',{class:'warn'},'🔒 フルネームは使わないでね。下の名前かニックネームだけ入力してください。'),
-    h('div',{class:'row'},nm),h('div',{class:'row'},bm,'月',bd,'日'),
+    h('div',{class:'row'},nm),h('div',{class:'row'},bm,'月',bd,'日'),gb&&h('div',{class:'row'},gb),gn,phRow,
     hm&&h('p',{class:'note'},'Googleから誕生日を取得しました。違っていたら直してね。'),
     btn('保存',async()=>{
       const v=nm.value.trim(),m=+bm.value,d=+bd.value;
@@ -877,14 +928,24 @@ function cardPage(f,y){
   curFull=draw;draw();
 }
 // ---- アカウント写真の取得（ログインのたびに、アカウントから取り直す） ----
-function myPh(){
+function rawPh(){ // アカウントの写真（表示しない設定は無視した、そのままの写真）
   if(!me)return '';
   let u=me.photoURL||'';
   if(!u)for(const x of (me.providerData||[]))if(x&&x.photoURL){u=x.photoURL;break}
   if(!u)u=linePic;
   return okPh(u)?u:'';
 }
-const photoOf=u=>u===(me&&me.uid)?(myPh()||(prof&&prof.ph)||''):((friends.find(x=>x.id===u)||{}).ph||'');
+// 「写真を表示しない」設定（この端末に保存し、Firebaseの設定にも保存して別の端末にも反映）
+function hidePh(){try{return !!me&&localStorage.getItem('np_'+me.uid)==='1'}catch(e){return false}}
+function myPh(){return hidePh()?'':rawPh()}
+function myAv(){return hidePh()?'':(myPh()||(prof&&prof.ph)||'')}
+function setHidePh(v){
+  if(!me)return;
+  try{localStorage.setItem('np_'+me.uid,v?'1':'0')}catch(e){}
+  set(ref(db,`settings/${me.uid}/np`),v).catch(()=>{});
+  syncPhoto();render();
+}
+const photoOf=u=>u===(me&&me.uid)?myAv():((friends.find(x=>x.id===u)||{}).ph||'');
 async function syncPhoto(){ // 自分のプロフィールの写真を、いまのアカウントの写真に合わせる（友だちにも見えるようにする）
   if(!me||!prof||!claimsDone)return;
   if(phBusy){phAgain=true;return}
@@ -1046,7 +1107,7 @@ function calDlg(off){
   const days=Object.keys(by).map(Number).sort((a,b)=>a-b);
   const lst=days.length?days.flatMap(d=>by[d].map(p=>{
     const diff=Math.round((new Date(Y,M,d)-t0)/864e5);
-    return h('div',{class:'row2'},avatar(p.self?myPh()||p.ph:p.ph,34),
+    return h('div',{class:'row2'},avatar(p.self?myAv():p.ph,34),
       h('div',{class:'g'},h('b',{},p.self?'わたし（'+p.nm+'）':p.nm),h('div',{class:'note'},(M+1)+'月'+d+'日 ・ '+(diff===0?'今日！':diff>0?'あと'+diff+'日':'終わりました'))),
       btn('📖 カード',()=>pickYear(p)));
   })):[h('p',{class:'note'},'この月は、誕生日の人がいません。')];
@@ -1108,6 +1169,98 @@ async function dl(){
     const a=h('a',{href:URL.createObjectURL(await r.blob()),download:'birthday-cards.html'});document.body.append(a);a.click();a.remove();
   }catch(e){msg('ここでは保存できません。公開したURLで開いて試してね。')}
 }
+// ---- 誕生日のちょっとした楽しみ（星座・誕生石・ケーキ・おみくじ） ----
+const ZODIAC=[[1,20,'♒','みずがめ座'],[2,19,'♓','うお座'],[3,21,'♈','おひつじ座'],[4,20,'♉','おうし座'],[5,21,'♊','ふたご座'],[6,22,'♋','かに座'],[7,23,'♌','しし座'],[8,23,'♍','おとめ座'],[9,23,'♎','てんびん座'],[10,24,'♏','さそり座'],[11,23,'♐','いて座'],[12,22,'♑','やぎ座']];
+const STONE=['ガーネット','アメジスト','アクアマリン','ダイヤモンド','エメラルド','パール','ルビー','ペリドット','サファイア','オパール','トパーズ','ターコイズ'];
+const zodiac=(m,d)=>{let z=ZODIAC[11];for(const x of ZODIAC)if(m*100+d>=x[0]*100+x[1])z=x;return z};
+const trivia=p=>{if(!p||!STONE[p.m-1])return '';const z=zodiac(p.m,p.d);return z[2]+' '+z[3]+' ・ 💎 '+STONE[p.m-1]};
+const hash=s=>{let a=2166136261;for(const c of String(s)){a^=c.codePointAt(0);a=Math.imul(a,16777619)}return a>>>0};
+const OMI_LV=['大吉','大吉','中吉','中吉','小吉'];
+const OMI_MSG=['ずっと気になっていたことを、ひとつ始めてみよう。','「ありがとう」を言われる場面が、いつもより多い1年になるよ。','小さな寄り道が、すてきな出会いにつながるよ。','今日の自分を、まず自分でほめてあげてね。','食べたいものを食べると、運がのびるよ。','連絡を迷っていた人に、ひとこと送ってみて。','やりたいと思ったことは、思ったより早くかなうよ。','笑った数だけ、来年の運が増えていくよ。'];
+const OMI_COL=[['ピンク','#f48fb1'],['みずいろ','#81d4fa'],['きいろ','#ffe066'],['みどり','#81c995'],['むらさき','#b39ddb'],['オレンジ','#ffb74d']];
+const OMI_ITEM=['あたたかい飲みもの','お気に入りのペン','ハンカチ','ちいさなお菓子','イヤホン','手帳','お花','ノート'];
+// おみくじは「今年の誕生日」ごとに1つ決まる（何回引いても同じ。データは保存しない）
+function omikuji(){const s=me.uid+':'+nxt(prof).y,pk=(a,k)=>a[hash(s+k)%a.length];return{lv:pk(OMI_LV,'l'),msg:pk(OMI_MSG,'m'),col:pk(OMI_COL,'c'),item:pk(OMI_ITEM,'i')}}
+const CANDLE=['#f48fb1','#81d4fa','#ffe066','#81c995','#b39ddb'],CX=[62,86,110,134,158];
+const cakeSVG=()=>'<svg viewBox="0 0 220 190" role="img" aria-label="バースデーケーキ">'
+  +'<ellipse cx="110" cy="168" rx="104" ry="11" fill="#d9d2c5"/>'
+  +'<rect x="18" y="112" width="184" height="52" rx="10" fill="#ffc2d1"/><rect x="18" y="112" width="184" height="14" rx="7" fill="#fff"/>'
+  +'<rect x="50" y="72" width="120" height="42" rx="9" fill="#ffe9a8"/><rect x="50" y="72" width="120" height="12" rx="6" fill="#fff"/>'
+  +[34,186,60,160].map(x=>`<circle cx="${x}" cy="112" r="6" fill="#e53935"/>`).join('')
+  +CX.map((x,i)=>`<g class="cd" data-x="${x}"><rect x="${x-13}" y="22" width="26" height="52" fill="transparent"/><rect x="${x-4}" y="46" width="8" height="26" rx="2" fill="${CANDLE[i]}"/><line x1="${x}" y1="43" x2="${x}" y2="46" stroke="#555" stroke-width="1.5"/><g class="fl"><ellipse cx="${x}" cy="35" rx="5.5" ry="9" fill="#ffb300"/><ellipse cx="${x}" cy="37" rx="2.8" ry="5" fill="#fff3a0"/></g></g>`).join('')
+  +'</svg>';
+function cakeDlg(){
+  const my=nxt(prof),cake=h('div',{class:'cake'}),note=h('p',{class:'note',style:'text-align:center'}),act=h('div',{class:'row',style:'justify-content:center'}),res=h('div',{});
+  let stream=null,ctx=null,raf=0;
+  const stop=()=>{cancelAnimationFrame(raf);raf=0;try{stream&&stream.getTracks().forEach(t=>t.stop())}catch(e){}try{ctx&&ctx.close()}catch(e){}stream=null;ctx=null};
+  cake.innerHTML=cakeSVG();
+  const lit=()=>[...cake.querySelectorAll('.cd:not(.off)')];
+  const confetti=()=>{for(let i=0;i<26;i++){const e=h('span',{class:'cf',style:`left:${Math.random()*92}%;--x:${(Math.random()-.5)*60}px;animation-delay:${Math.random()*.5}s;font-size:${18+Math.random()*16}px`},['🎉','🎈','✨','🎊'][i%4]);cake.append(e);setTimeout(()=>e.remove(),2800)}};
+  const done=()=>{stop();note.textContent=my.dd===0?'おめでとう！すてきな1年になりますように🎉':'願いがかないますように✨';confetti();
+    act.replaceChildren(btn('🔮 バースデーおみくじを引く',omi,'btn'),btn('もう一度',reset,'btn s ghost'))};
+  const blow=g=>{if(!g||g.classList.contains('off'))return;g.classList.add('off');
+    const p=h('span',{class:'pf',style:`left:${g.dataset.x/220*100}%;top:${28/190*100}%`},'💨');cake.append(p);setTimeout(()=>p.remove(),950);
+    if(!lit().length)done()};
+  const puff=()=>{lit().forEach((g,i)=>setTimeout(()=>blow(g),i*110))};
+  async function mic(){
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+      const AC=window.AudioContext||window.webkitAudioContext;ctx=new AC();if(ctx.resume)ctx.resume();
+      const an=ctx.createAnalyser();an.fftSize=512;ctx.createMediaStreamSource(stream).connect(an);
+      const buf=new Uint8Array(an.fftSize);let hot=0;
+      note.textContent='マイクに「ふーっ」と息をふきかけてね🎤（消えないときは、ボタンやろうそくをタップしてもOK）';
+      const tick=()=>{
+        if(!stream)return;if(!cake.isConnected){stop();return}
+        an.getByteTimeDomainData(buf);let sum=0;for(const v of buf){const x=(v-128)/128;sum+=x*x}
+        hot=Math.sqrt(sum/buf.length)>0.2?hot+1:Math.max(0,hot-1);
+        if(hot>=10){stop();puff();return}
+        raf=requestAnimationFrame(tick);
+      };
+      tick();
+    }catch(e){stop();note.textContent='マイクを使えませんでした。ボタンかろうそくをタップしてね。'}
+  }
+  const canMic=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
+  const mkAct=()=>act.replaceChildren(...[btn('💨 ふーっ！',puff,'btn'),canMic&&btn('🎤 息で消す',mic,'btn s ghost')].filter(Boolean));
+  const omi=()=>{const r=omikuji();
+    res.replaceChildren(h('div',{class:'omi'},h('div',{class:'ol'},r.lv),
+      h('div',{class:'note'},'ラッキーカラー：',h('span',{class:'dot',style:'background:'+r.col[1]}),r.col[0]),
+      h('div',{class:'note'},'ラッキーアイテム：'+r.item),h('p',{},r.msg),h('p',{class:'note'},'この結果は、今年の誕生日のぶんだよ。')))};
+  const reset=()=>{stop();cake.querySelectorAll('.cd.off').forEach(g=>g.classList.remove('off'));res.replaceChildren();note.textContent='願いごとをして、ろうそくの火を消そう🕯';mkAct()};
+  cake.onclick=e=>{const g=e.target.closest&&e.target.closest('.cd');if(g)blow(g)};
+  note.textContent='願いごとをして、ろうそくの火を消そう🕯（ろうそくをタップしてもOK）';mkAct();
+  show(my.dd===0?'🎂 '+prof.nm+'さん、おめでとう！':'🎂 バースデーケーキ',cake,note,act,res);
+  $('#dlg').addEventListener('close',stop,{once:true});
+}
+// 自分の誕生日に初めて開いたとき、その年に1回だけケーキを自動で出す
+function autoCake(){
+  const k='cake_'+me.uid+'_'+nxt(prof).y;try{if(localStorage.getItem(k))return}catch(e){return}
+  setTimeout(()=>{if(!me||!prof||$('#dlg').open||$('#cl'))return;try{localStorage.setItem(k,'1')}catch(e){return}cakeDlg()},2600);
+}
+
+// ---- 誕生日までのカウントダウン（楽しみになる） ----
+const WD=['日','月','火','水','木','金','土'];
+function cdMsg(dd){
+  return dd===1?'いよいよ明日！今夜はぐっすり寝て、元気に迎えようね🌙'
+    :dd===2?'あさってが誕生日！そろそろ、そわそわしてきたかな？'
+    :dd<=3?'あと3日！もうすぐだよ🎈'
+    :dd<=7?'1週間を切りました！届いたカードも、もうすぐ開けられるよ'
+    :dd<=14?'あと2週間。当日の楽しみを、ひとつ予定に入れてみよう'
+    :dd<=30?'1か月を切りました。どんな1年にしたいか、考えてみよう✨'
+    :dd<=100?'ゆっくりカウントダウン中。毎日少しずつ近づいているよ'
+    :'まだ先だけど、友だちを招待しておくと、当日にカードがたくさん届くよ';
+}
+function cdBox(my){
+  const nx=new Date(my.y,prof.m-1,prof.d),pv=new Date(my.y-1,prof.m-1,prof.d),total=Math.max(1,Math.round((nx-pv)/864e5)),
+    pct=Math.floor(Math.min(total,Math.max(0,total-my.dd))/total*100),
+    n=Math.max((cnt[me.uid+'w']||0)+(cnt[me.uid+'p']||0),(walls[me.uid]||[]).filter(c=>c.y===my.y).length+priv.filter(c=>c.y===my.y).length);
+  return h('div',{class:'box cdw'},
+    h('div',{class:'cdn'},'誕生日まで あと',h('b',{},String(my.dd)),'日'),
+    h('div',{class:'pg',role:'progressbar','aria-valuemin':'0','aria-valuemax':'100','aria-valuenow':String(pct)},h('i',{style:'width:'+pct+'%'})),
+    h('div',{class:'note'},'前の誕生日から '+pct+'% 🎂'),h('div',{class:'note'},'今年は '+prof.m+'月'+prof.d+'日（'+WD[nx.getDay()]+'曜日）'),
+    h('p',{},cdMsg(my.dd)),
+    n>0&&h('p',{class:'note'},'🎁 今年のぶんが、すでに '+n+'個 届いているよ。カードは誕生日の当日から開けられます🔒'));
+}
+
 function party(){
   const w=h('div',{id:'pt'});
   for(let i=0;i<36;i++)w.append(h('span',{style:`left:${Math.random()*92}%;font-size:${22+Math.random()*34}px;--y:${-(45+Math.random()*50)}vh;--x:${(Math.random()-.5)*80}px;animation-delay:${Math.random()*1.6}s`},'🎉'));
@@ -1143,31 +1296,51 @@ async function lineBack(){
 }
 
 function render(){
-  const A=$('#app');A.replaceChildren();
-  const kd=me?(prof?'h':'p'):'l';if(kd!==render.k){render.k=kd;A.classList.add('in');clearTimeout(render.t);render.t=setTimeout(()=>A.classList.remove('in'),1500)}
+  const real=$('#app');
+  const kd=me?(prof?'h':'p'):'l';if(kd!==render.k){render.k=kd;render.t0=performance.now();real.classList.add('in');clearTimeout(render.t);render.t=setTimeout(()=>real.classList.remove('in'),1500)}
+  const A=document.createElement('div');
+  buildApp(A);
+  commitApp(real,A);
+}
+function commitApp(real,A){
+  if(real.childNodes.length&&real.innerHTML===A.innerHTML)return; // 見た目が同じなら作り直さない
+  // 読み込み済みの写真は、同じ要素をそのまま使い回す（空白のちらつき防止）
+  const olds={};
+  real.querySelectorAll('.av img').forEach(im=>{if(im.complete&&im.naturalWidth)(olds[im.src+'|'+im.getAttribute('width')]||(olds[im.src+'|'+im.getAttribute('width')]=[])).push(im)});
+  A.querySelectorAll('.av img').forEach(n=>{const l=olds[n.src+'|'+n.getAttribute('width')];if(l&&l.length){const o=l.shift();o.onerror=n.onerror;n.replaceWith(o)}});
+  real.replaceChildren(...A.childNodes);
+  // 出現アニメーションの途中で作り直しても、最初からやり直さず続きから再生する
+  if(real.classList.contains('in')){const el=performance.now()-(render.t0||0);if(el>30)[...real.children].forEach(c=>{c.style.animationDelay='-'+Math.round(el)+'ms'})}
+}
+function buildApp(A){
   if(!me){A.append(loading&&known()?loadingBox():loginBox());return}
   if(hintBusy){A.append(loadingBox());return}
   if(loadErr&&!prof){A.append(errBox());return}
   if(loading&&!prof){A.append(loadingBox());return}
   if(!prof){A.append(profForm(false));return}
   const my=nxt(prof),fl=friends.map(p=>({...p,...nxt(p)})).sort((a,b)=>a.dd-b.dd),td=[...(my.dd===0?['あなた']:[]),...fl.filter(p=>p.dd===0).map(p=>p.nm+'さん')];
-  if(my.dd===0&&!partyDone){partyDone=true;party()}
+  if(my.dd===0&&!partyDone){partyDone=true;party();autoCake()}
   if(td.length){
     const bt='今日は '+td.join('、')+' の誕生日！';
     if(bt!==banKey){banKey=bt;banOff=false;clearTimeout(banT);banT=setTimeout(()=>{banOff=true;const e=$('#ban');if(e){e.classList.add('out');setTimeout(()=>e.remove(),450)}},5000)}
     if(!banOff)A.append(h('div',{id:'ban'},bt));
   }
   A.append(h('div',{class:'box mine'},icon(()=>inbox(),'わたしのカード'),
-    h('div',{class:'g'},h('div',{class:'nmr'},avatar(myPh()||prof.ph,34),h('b',{},prof.nm)),h('div',{class:'note'},prof.m+'月'+prof.d+'日 ・ '+(my.dd===0?'今日が誕生日！':'あと'+my.dd+'日')),h('div',{},'届いたカード '+Math.max((cnt[me.uid+'w']||0)+(cnt[me.uid+'p']||0),(walls[me.uid]||[]).length+priv.length)+'枚')),
-    btn('✉ カード',()=>inbox()),btn('編集',()=>show('プロフィール編集',profForm(true)))));
-  if(/^line:/.test(me.uid)&&!myPh()&&!prof.ph&&!linePhTried())A.append(h('div',{class:'box'},h('p',{class:'note'},'LINEの写真を表示するには、一度だけLINEで確認が必要です（ログアウトはしません。データもそのままです）。'),btn('LINEの写真を取得',()=>{try{localStorage.setItem('lph_'+me.uid,'1')}catch(e){}lineLogin()},'btn s')));
+    h('div',{class:'g'},h('div',{class:'nmr'},avatar(myAv(),34),h('b',{},prof.nm)),h('div',{class:'note'},prof.m+'月'+prof.d+'日 ・ '+(my.dd===0?'今日が誕生日！':'あと'+my.dd+'日')),h('div',{class:'note'},trivia(prof)),h('div',{},'届いたカード '+Math.max((cnt[me.uid+'w']||0)+(cnt[me.uid+'p']||0),(walls[me.uid]||[]).length+priv.length)+'枚')),
+    btn('✉ カード',()=>inbox()),btn('🎂 ケーキ',cakeDlg),btn('編集',()=>show('プロフィール編集',profForm(true)))));
+  if(my.dd>0)A.append(cdBox(my));
+  if(/^line:/.test(me.uid)&&!hidePh()&&!myPh()&&!prof.ph&&!linePhTried())A.append(h('div',{class:'box'},h('p',{class:'note'},'LINEの写真を表示するには、一度だけLINEで確認が必要です（ログアウトはしません。データもそのままです）。'),btn('LINEの写真を取得',()=>{try{localStorage.setItem('lph_'+me.uid,'1')}catch(e){}lineLogin()},'btn s')));
+  const soon=fl.filter(p=>p.dd<=3&&walls[p.id]!==undefined&&sentPriv[p.id]!==undefined&&![...walls[p.id],...sentPriv[p.id]].some(c=>c.from===me.uid&&c.y===p.y&&c.bg!=='bal'));
+  if(soon.length)A.append(h('div',{class:'box soon'},h('b',{},'🎁 もうすぐ誕生日（カードはまだ送っていないよ）'),
+    soon.map(p=>h('div',{class:'row'},avatar(p.ph,28),h('span',{},p.nm+'さん（'+(p.dd===0?'今日':'あと'+p.dd+'日')+'）'),btn('✍ カードを書く',()=>cardPage(p,p.y))))));
   A.append(h('div',{class:'row'},btn('友だち招待QR',invite,'btn'),lineInviteBtn(),btn('📅 今月の誕生日',()=>calDlg(0),'btn ghost')));
-  A.append(h('h2',{},'友だちの誕生日'));
+  A.append(h('h2',{},'友だちの誕生日',h('span',{class:'fc'},'👥 '+fl.length+'人')));
+  if(fl.length)A.append(h('p',{class:'note'},'🗓 次は '+fl.filter(p=>p.dd===fl[0].dd).slice(0,3).map(p=>p.nm+'さん').join('、')+'（'+(fl[0].dd===0?'今日':'あと'+fl[0].dd+'日')+'）'));
   if(!fl.length)A.append(h('p',{class:'note'},'まだ友だちがいません。「友だち招待QR」を見せて読み取ってもらおう！'));
   fl.forEach(p=>{
     const n=Math.max(cnt[p.id+'w']||0,(walls[p.id]||[]).filter(c=>c.y===p.y).length);
     A.append(h('div',{class:'row2'},icon(()=>pickYear(p),p.nm+'さんのカード'),
-      h('div',{class:'g'},h('div',{class:'nmr'},avatar(p.ph,34),h('b',{},p.nm)),p.dd===0&&h('div',{class:'bd0'},'今日が誕生日❕✨'),h('div',{class:'note'},p.m+'月'+p.d+'日 ・ '+(p.dd===0?'今日！':'あと'+p.dd+'日')),h('div',{class:'note'},'風船 '+n+'個')),
+      h('div',{class:'g'},h('div',{class:'nmr'},avatar(p.ph,34),h('b',{},p.nm)),p.dd===0&&h('div',{class:'bd0'},'今日が誕生日❕✨'),h('div',{class:'note'},p.m+'月'+p.d+'日 ・ '+(p.dd===0?'今日！':'あと'+p.dd+'日')),h('div',{class:'note'},trivia(p)),h('div',{class:'note'},'風船 '+n+'個')),
       btn('📖 カード',()=>pickYear(p)),
       h('button',{class:'x2',onclick:()=>ask('友だちを解除','「'+p.nm+'」さんとの友だちを解除します。お互いの誕生日と風船が見えなくなります。よろしいですか？','解除する',async()=>{try{await remove(ref(db,`friends/${me.uid}/${p.id}`));await remove(ref(db,`friends/${p.id}/${me.uid}`))}catch(e){msg('解除できませんでした。')}})},'解除')));
   });
