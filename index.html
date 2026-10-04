@@ -456,12 +456,13 @@ function askNotifOnce(next){
 function mailBox(){
   const MAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const em=h('input',{type:'email',placeholder:'メールアドレス',maxlength:100,value:me.email||'',style:'flex:1;min-width:0'}),out=h('p',{class:'note'});
-  get(ref(db,'notify/'+me.uid)).then(x=>{const v=x.val();if(v){em.value=v.em||em.value;
+  get(ref(db,'notify/'+me.uid)).then(x=>{const v=x.val();if(v){em.value=v.em||'';
     // 以前に通知をオフにしていた人も、必ずオンにする
     if(v.on!==true&&MAIL_RE.test(v.em||''))set(ref(db,'notify/'+me.uid),{em:v.em,on:true,ts:Date.now()}).catch(()=>{})}}).catch(()=>{});
   return h('div',{},h('div',{class:'row'},em),
-    h('p',{class:'note'},'メールでのお知らせは、常にオンです。メールアドレスは必ず入れてね。'),
+    h('p',{class:'note'},'メールアドレスを入れて保存すると、メールでお知らせが届きます。止めたいときは、メールアドレスを空にして保存してね。'),
     btn('保存',async()=>{const v=em.value.trim();
+      if(!v){try{await set(ref(db,'notify/'+me.uid),{em:'',on:false,ts:Date.now()});out.textContent='保存しました。メールでのお知らせは止めました。'}catch(e){out.textContent='保存できませんでした（'+(e.code||'')+'）'}return}
       if(!MAIL_RE.test(v)){out.textContent='メールアドレスを正しく入力してね。';return}
       try{await set(ref(db,'notify/'+me.uid),{em:v,on:true,ts:Date.now()});out.textContent='保存しました。確認メールを送ります（1分ほどかかることがあります）。届かないときは迷惑メールも見てね。'}catch(e){out.textContent='保存できませんでした（'+(e.code||'')+'）'}},'btn s'),out);
 }
@@ -1204,9 +1205,11 @@ const OMI_COL=[['ピンク','#f48fb1'],['みずいろ','#81d4fa'],['きいろ','
 const OMI_ITEM=['あたたかい飲みもの','お気に入りのペン','ハンカチ','ちいさなお菓子','イヤホン','手帳','お花','ノート'];
 // おみくじは「今年の誕生日」ごとに1つ決まり、結果はFirebase（celebrate/{uid}/{年}/omi）に保存する
 const celY=()=>String(nxt(prof).y);
+// おみくじは、誕生日が来ていなくても引けるが、「今年」の分だけ（来年の分は引けない）
+const omiY=()=>String(new Date().getFullYear());
 function celSet(y,k,v){const u=me.uid;(cel[y]=cel[y]||{})[k]=v;set(ref(db,`celebrate/${u}/${y}/${k}`),v).catch(()=>{})}
 function omikuji(){
-  const y=celY(),sv=cel[y]&&cel[y].omi;
+  const y=omiY(),sv=cel[y]&&cel[y].omi;
   if(sv&&sv.lv)return{lv:sv.lv,msg:sv.msg,col:[sv.cn,sv.cc],item:sv.it};
   const sd=me.uid+':'+y,pk=(a,k)=>a[hash(sd+k)%a.length],r={lv:pk(OMI_LV,'l'),msg:pk(OMI_MSG,'m'),col:pk(OMI_COL,'c'),item:pk(OMI_ITEM,'i')};
   if(celLoaded)celSet(y,'omi',{lv:r.lv,msg:r.msg,cn:r.col[0],cc:r.col[1],it:r.item});
@@ -1247,7 +1250,7 @@ async function makeOmiImage(r){
   g.save();g.fillStyle='#fff';g.textAlign='center';g.textBaseline='middle';g.shadowColor='rgba(0,0,0,.25)';g.shadowBlur=10;g.shadowOffsetY=3;
   g.font='700 70px '+ff;g.fillText('🔮 バースデーおみくじ',W/2,M+88);
   g.font='700 78px '+ff;g.fillText(String(prof.nm||'').slice(0,20)+'さん',W/2,M+190);
-  g.font='40px '+ff;g.fillText(celY()+'年度',W/2,M+266);g.restore();
+  g.font='40px '+ff;g.fillText(omiY()+'年度',W/2,M+266);g.restore();
   // 台紙
   g.save();g.shadowColor='rgba(0,0,0,.28)';g.shadowBlur=40;g.shadowOffsetY=14;g.fillStyle='#fffdf5';rr(g,px,py,PW,PH,44);g.fill();g.restore();
   g.save();g.strokeStyle='#e3b53c';g.lineWidth=10;rr(g,px+5,py+5,PW-10,PH-10,40);g.stroke();g.restore();
@@ -1330,7 +1333,7 @@ function cakeDlg(){
     omiTs=[setTimeout(()=>{omiTs=[];omiBusy=false;showOmi(r,true)},2150)];
   };
   const showOmi=(r,fx)=>{const out=h('p',{class:'note',style:'text-align:center'});
-    const name='omikuji-'+celY()+'.png';let bp=null;
+    const name='omikuji-'+omiY()+'.png';let bp=null;
     const getB=()=>bp||(bp=makeOmiImage(r).catch(e=>{bp=null;throw e}));
     getB().catch(()=>{}); // 先に作っておく（送るときに待たずに済む）
     const mk=btn('📷 画像にして保存',async()=>{
