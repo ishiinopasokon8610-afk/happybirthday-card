@@ -705,7 +705,8 @@ function profForm(edit){
     }catch(e){gn.textContent=['auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(e.code)?'':'取得できませんでした（'+(e.code||'')+'）。手入力してね。'}
     gb.disabled=false;
   },'btn s ghost'):null;
-  return h('div',{class:'box'},h('b',{},edit?'プロフィール編集':'はじめに、自分のプロフィールを登録'),
+  const back=(!edit&&me&&me.isAnonymous)?h('div',{class:'row'},btn('← 戻る',()=>{hint=null;msg('');setKnown(false);signOut(auth)},'btn s ghost')):null; // 名前だけで始める人が、ログイン画面に戻れるように
+  return h('div',{class:'box'},back,h('b',{},edit?'プロフィール編集':'はじめに、自分のプロフィールを登録'),
     h('p',{class:'warn'},'🔒 フルネームは使わないでね。下の名前かニックネームだけ入力してください。'),
     h('div',{class:'row'},nm),h('div',{class:'row'},bm,'月',bd,'日'),gb&&h('div',{class:'row'},gb),gn,phRow,
     hm&&h('p',{class:'note'},'Googleから誕生日を取得しました。違っていたら直してね。'),
