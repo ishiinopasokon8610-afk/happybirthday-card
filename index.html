@@ -20,6 +20,18 @@ main{max-width:640px;margin:0 auto;padding:16px}
 h1{font-size:22px;margin:0 0 4px;color:var(--acc2)}h2{font-size:17px;margin:20px 0 4px;color:var(--acc2)}
 .note{color:var(--sub);font-size:14px;margin:4px 0}.note:empty{display:none}.fc{font-size:13px;font-weight:400;color:var(--sub);margin-left:10px}
 .cake{position:relative;overflow:hidden;width:min(100%,300px);margin:0 auto}.cake svg{width:100%;height:auto;display:block}
+.btn.big{font-size:20px;padding:.85em 1.2em;min-height:60px;flex:1 1 100%}
+.btn.tap{min-height:48px;padding:.6em 1.2em;font-size:16px}.btn.w{flex:1 1 100%}
+.stk{display:flex;flex-direction:column;gap:10px;margin:12px 0}.stk .btn{width:100%}
+.omx{position:relative;overflow:hidden;width:min(100%,220px);margin:6px auto}.omx svg{width:100%;height:auto;display:block}
+.omb{transform-box:fill-box;transform-origin:50% 100%;animation:omsh 1.3s ease-in-out both}
+@keyframes omsh{0%{transform:rotate(0)}10%{transform:translateY(-8px) rotate(-14deg)}25%{transform:translateY(0) rotate(13deg)}40%{transform:translateY(-8px) rotate(-13deg)}55%{transform:translateY(0) rotate(12deg)}70%{transform:translateY(-6px) rotate(-9deg)}85%{transform:rotate(6deg)}100%{transform:rotate(0)}}
+.oms{animation:omst .7s cubic-bezier(.2,1.3,.4,1) 1.35s both}@keyframes omst{from{transform:translateY(0)}to{transform:translateY(-34px)}}
+.omi.pop{transform-origin:50% 0;animation:omun .7s cubic-bezier(.2,1.2,.4,1) both}@keyframes omun{from{transform:scaleY(.05);opacity:0}30%{opacity:1}to{transform:none;opacity:1}}
+.omi.pop .ol{animation:olz .7s cubic-bezier(.2,1.3,.4,1) .45s both}@keyframes olz{0%{transform:scale(.2) rotate(-10deg);opacity:0}60%{transform:scale(1.3) rotate(3deg);opacity:1}100%{transform:none;opacity:1}}
+.omi.pop>:not(.ol):not(.osk){animation:fadein .5s ease-out 1s both}
+.osk{position:absolute;pointer-events:none;animation:spk 1s ease-out both}
+@media (prefers-reduced-motion:reduce){.omb,.oms,.omi.pop,.omi.pop .ol,.omi.pop>:not(.ol),.osk{animation:none}.osk{display:none}}
 .cdl{cursor:pointer}.fl{transform-box:fill-box;transform-origin:50% 100%;animation:flk .5s ease-in-out infinite alternate}.cdl.off .fl{display:none}
 @keyframes flk{from{transform:scale(1,1) rotate(-3deg)}to{transform:scale(.88,1.12) rotate(3deg)}}
 .cf{position:absolute;top:-30px;pointer-events:none;animation:cff 2.2s ease-in forwards}@keyframes cff{to{transform:translate(var(--x),270px) rotate(300deg);opacity:0}}
@@ -46,7 +58,7 @@ input[readonly]{flex:1;min-width:0}
 .bgb{width:64px;height:44px;border-radius:10px;border:1px solid var(--line);cursor:pointer;padding:0}
 .sw.on,.bgb.on{outline:3px solid var(--acc);outline-offset:1px}
 .qrb{text-align:center}.qrb canvas{background:#fff}
-dialog{border:0;border-radius:18px;padding:16px;background:var(--card);color:var(--fg);width:min(94vw,520px);max-height:90vh;overflow:auto}
+dialog{border:0;border-radius:18px;padding:16px;background:var(--card);color:var(--fg);width:min(94vw,520px);max-height:90vh;max-height:90dvh;overflow:auto;overscroll-behavior:contain}
 dialog::backdrop{background:#0a2a1b88}
 .dh{display:flex;justify-content:space-between;align-items:center;font-size:18px;color:var(--acc2)}
 .dh button{background:none;border:0;font-size:20px;color:var(--fg);cursor:pointer}
@@ -1198,6 +1210,17 @@ const cakeSVG=()=>'<svg viewBox="0 0 220 190" role="img" aria-label="バース�
   +[34,186,60,160].map(x=>`<circle cx="${x}" cy="112" r="6" fill="#e53935"/>`).join('')
   +CX.map((x,i)=>`<g class="cdl" data-x="${x}"><rect x="${x-13}" y="22" width="26" height="52" fill="transparent"/><rect x="${x-4}" y="46" width="8" height="26" rx="2" fill="${CANDLE[i]}"/><line x1="${x}" y1="43" x2="${x}" y2="46" stroke="#555" stroke-width="1.5"/><g class="fl"><ellipse cx="${x}" cy="35" rx="5.5" ry="9" fill="#ffb300"/><ellipse cx="${x}" cy="37" rx="2.8" ry="5" fill="#fff3a0"/></g></g>`).join('')
   +'</svg>';
+// おみくじの筒（ふると、1本だけ棒が出てくる）
+const OMI_BOX='<svg viewBox="0 0 200 230" role="img" aria-label="おみくじの筒"><ellipse cx="100" cy="214" rx="58" ry="9" fill="#d9d2c5"/>'
+  +'<g class="omb">'
+  +'<rect x="84" y="56" width="5" height="40" rx="2" fill="#e8c98a"/><rect x="92" y="60" width="5" height="36" rx="2" fill="#e8c98a"/><rect x="111" y="60" width="5" height="36" rx="2" fill="#e8c98a"/><rect x="119" y="56" width="5" height="40" rx="2" fill="#e8c98a"/>'
+  +'<g class="oms"><rect x="101" y="46" width="7" height="50" rx="2.5" fill="#fff2c0" stroke="#e3b53c" stroke-width="1.5"/><rect x="101" y="46" width="7" height="9" rx="2.5" fill="#e0405e"/></g>'
+  +'<rect x="62" y="86" width="76" height="124" rx="12" fill="#d9463e"/>'
+  +'<ellipse cx="100" cy="86" rx="38" ry="9" fill="#a8322c"/><ellipse cx="100" cy="86" rx="38" ry="9" fill="none" stroke="#f2cb55" stroke-width="2"/>'
+  +'<rect x="62" y="104" width="76" height="6" fill="#f2cb55"/><rect x="62" y="194" width="76" height="6" fill="#f2cb55"/>'
+  +'<rect x="84" y="120" width="32" height="68" rx="4" fill="#fff8e7"/>'
+  +['お','み','く','じ'].map((c,i)=>`<text x="100" y="${137+i*16}" text-anchor="middle" font-size="14" font-weight="700" fill="#d9463e">${c}</text>`).join('')
+  +'</g></svg>';
 // おみくじの結果を画像にする（カードの画像と同じ見た目の台紙に載せる）
 async function makeOmiImage(r){
   const ff=(FONTS[curFont()]||FONTS.std).ff;
@@ -1248,11 +1271,11 @@ function cakeDlg(){
   const lit=()=>[...cake.querySelectorAll('.cdl:not(.off)')];
   const confetti=()=>{for(let i=0;i<26;i++){const e=h('span',{class:'cf',style:`left:${Math.random()*92}%;--x:${(Math.random()-.5)*60}px;animation-delay:${Math.random()*.5}s;font-size:${18+Math.random()*16}px`},['🎉','🎈','✨','🎊'][i%4]);cake.append(e);setTimeout(()=>e.remove(),2800)}};
   const done=()=>{stop();note.textContent=my.dd===0?'おめでとう！すてきな1年になりますように🎉':'願いがかないますように✨';confetti();
-    act.replaceChildren(btn('🔮 バースデーおみくじを引く',omi,'btn'),btn('もう一度',reset,'btn s ghost'))};
+    act.replaceChildren(btn('🔮 バースデーおみくじを引く',omi,'btn big'),btn('もう一度',reset,'btn tap ghost w'))};
   const blow=g=>{if(!g||g.classList.contains('off'))return;g.classList.add('off');
     const p=h('span',{class:'pf',style:`left:${g.dataset.x/220*100}%;top:${28/190*100}%`},'💨');cake.append(p);setTimeout(()=>p.remove(),950);
     if(!lit().length)done()};
-  const puff=()=>{lit().forEach((g,i)=>setTimeout(()=>blow(g),i*110))};
+  const puff=()=>{lit().forEach((g,i)=>setTimeout(()=>blow(g),i*35))};
   async function mic(){
     try{
       stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
@@ -1280,34 +1303,48 @@ function cakeDlg(){
     }catch(e){stop();note.textContent='マイクを使えませんでした。ボタンかろうそくをタップしてね。'}
   }
   const canMic=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
-  const mkAct=()=>act.replaceChildren(...[btn('💨 ふーっ！',puff,'btn'),canMic&&btn('🎤 息で消す',mic,'btn s ghost')].filter(Boolean));
-  const omi=()=>{const r=omikuji(),pic=h('div',{}),out=h('p',{class:'note',style:'text-align:center'});
-    const mk=btn('📷 おみくじを画像にする',async()=>{
-      mk.disabled=true;out.textContent='画像を作っています…';
-      try{
-        const blob=await makeOmiImage(r),u=URL.createObjectURL(blob),name='omikuji-'+celY()+'.png';
-        $('#dlg').addEventListener('close',()=>URL.revokeObjectURL(u),{once:true});
-        pic.replaceChildren(
-          h('img',{src:u,alt:'おみくじの画像',style:'width:100%;border-radius:10px;display:block;margin-top:8px'}),
-          h('p',{class:'note'},'うまく保存できないときは、画像を長押ししてね。'),
-          h('div',{class:'row'},
-            btn('📷 画像で保存',()=>{saveBlob(blob,name);out.textContent='保存しました。（ダウンロード、または写真・ファイルのアプリを見てね）'},'btn'),
-            btn(withIcon(L_SVG,'LINEなどで送る','ln'),async()=>{
-              if(!(await shareImg(blob,name,'バースデーおみくじを引いたよ🎈'))){saveBlob(blob,name);out.textContent='この端末では直接送れないため、画像を保存しました。LINEのトークで写真として送ってね。'}
-            },'btn line')));
-        out.textContent='';mk.hidden=true;
+  const mkAct=()=>act.replaceChildren(...[btn('💨 ふーっ！',puff,'btn tap w'),canMic&&btn('🎤 息で消す',mic,'btn big')].filter(Boolean));
+  // おみくじを引く：筒をふる → 棒が出てくる → 結果の紙がひらく
+  let omiBusy=false,omiTs=[];
+  const omiClear=()=>{omiTs.forEach(clearTimeout);omiTs=[];omiBusy=false};
+  const omi=()=>{
+    if(omiBusy)return;
+    const r=omikuji();
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches){showOmi(r,false);return}
+    omiBusy=true;
+    const st=h('div',{class:'omx'});st.innerHTML=OMI_BOX;
+    res.replaceChildren(st,h('p',{class:'note',style:'text-align:center'},'おみくじを引いているよ…'));
+    res.scrollIntoView({behavior:'smooth',block:'start'});
+    try{navigator.vibrate&&navigator.vibrate([40,50,40,50,40,50,40])}catch(e){}
+    omiTs=[setTimeout(()=>{omiTs=[];omiBusy=false;showOmi(r,true)},2150)];
+  };
+  const showOmi=(r,fx)=>{const out=h('p',{class:'note',style:'text-align:center'});
+    const name='omikuji-'+celY()+'.png';let bp=null;
+    const getB=()=>bp||(bp=makeOmiImage(r).catch(e=>{bp=null;throw e}));
+    getB().catch(()=>{}); // 先に作っておく（送るときに待たずに済む）
+    const mk=btn('📷 画像にして保存',async()=>{
+      out.textContent='画像を作っています…';
+      try{saveBlob(await getB(),name);out.textContent='保存しました。（ダウンロード、または写真・ファイルのアプリを見てね）'}
+      catch(e){out.textContent='画像を作れませんでした。'}
+    },'btn tap');
+    const ln=btn(withIcon(L_SVG,'LINEなどで送る','ln'),async()=>{
+      try{const bl=await getB();
+        if(!(await shareImg(bl,name,'バースデーおみくじを引いたよ🎈'))){saveBlob(bl,name);out.textContent='この端末では直接送れないため、画像を保存しました。LINEのトークで写真として送ってね。'}
       }catch(e){out.textContent='画像を作れませんでした。'}
-      mk.disabled=false;
-    },'btn s');
-    res.replaceChildren(h('div',{class:'omi'},h('div',{class:'ol'},r.lv),
+    },'btn tap line');
+    const box=h('div',{class:'omi'+(fx?' pop':''),style:'position:relative'},h('div',{class:'ol'},r.lv),
       h('div',{class:'note'},'ラッキーカラー：',h('span',{class:'dot',style:'background:'+r.col[1]}),r.col[0]),
-      h('div',{class:'note'},'ラッキーアイテム：'+r.item),h('p',{},r.msg),h('p',{class:'note'},'この結果は、今年の誕生日のぶんだよ。')),
-      h('div',{class:'row',style:'justify-content:center'},mk),pic,out)};
-  const reset=()=>{stop();cake.querySelectorAll('.cdl.off').forEach(g=>g.classList.remove('off'));res.replaceChildren();note.textContent='願いごとをして、ろうそくの火を消そう🕯';mkAct()};
+      h('div',{class:'note'},'ラッキーアイテム：'+r.item),h('p',{},r.msg),h('p',{class:'note'},'この結果は、今年の誕生日のぶんだよ。'));
+    if(fx){const n=r.lv==='大吉'?16:9;for(let i=0;i<n;i++){const a=Math.PI*2*i/n,d=70+Math.random()*60;
+      box.append(h('span',{class:'osk',style:`left:50%;top:34%;--x:${(Math.cos(a)*d).toFixed(0)}px;--y:${(Math.sin(a)*d*.8).toFixed(0)}px;font-size:${(16+Math.random()*10).toFixed(0)}px`},['✨','⭐','🎈','🎉'][i%4]))}}
+    res.replaceChildren(box,
+      h('div',{class:'stk',style:fx?'animation:fadein .5s ease-out 1.1s both':''},mk,ln,btn('閉じる',()=>$('#dlg').close(),'btn tap ghost')),out);
+    res.scrollIntoView({behavior:'smooth',block:'start'})};
+  const reset=()=>{stop();omiClear();cake.querySelectorAll('.cdl.off').forEach(g=>g.classList.remove('off'));res.replaceChildren();note.textContent='願いごとをして、ろうそくの火を消そう🕯';mkAct()};
   cake.onclick=e=>{const g=e.target.closest&&e.target.closest('.cdl');if(g)blow(g)};
   note.textContent='願いごとをして、ろうそくの火を消そう🕯（ろうそくをタップしてもOK）';mkAct();
   show(my.dd===0?'🎂 '+prof.nm+'さん、おめでとう！':'🎂 バースデーケーキ',cake,note,mt,act,res);
-  $('#dlg').addEventListener('close',stop,{once:true});
+  $('#dlg').addEventListener('close',()=>{stop();omiClear()},{once:true});
 }
 // 自分の誕生日に初めて開いたとき、その年に1回だけケーキを自動で出す（出したことはFirebaseに保存。別の端末でも、もう出ない）
 function autoCake(){
