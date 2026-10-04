@@ -21,6 +21,9 @@ h1{font-size:22px;margin:0 0 4px;color:var(--acc2)}h2{font-size:17px;margin:20px
 .note{color:var(--sub);font-size:14px;margin:4px 0}.note:empty{display:none}.fc{font-size:13px;font-weight:400;color:var(--sub);margin-left:10px}
 .cake{position:relative;overflow:hidden;width:min(100%,300px);margin:0 auto}.cake svg{width:100%;height:auto;display:block}
 .btn.big{font-size:20px;padding:.85em 1.2em;min-height:60px;flex:1 1 100%}
+.btn.hero{min-height:76px;font-size:22px;letter-spacing:.05em;background:linear-gradient(135deg,#1f7a50,#2f9e6a);color:#fff;box-shadow:0 4px 14px #2f9e6a66;animation:heropl 2s ease-in-out infinite}
+@keyframes heropl{0%,100%{box-shadow:0 4px 14px #2f9e6a66,0 0 0 0 #2f9e6a55}50%{box-shadow:0 4px 14px #2f9e6a66,0 0 0 10px #2f9e6a00}}
+@media (prefers-reduced-motion:reduce){.btn.hero{animation:none}}
 .btn.tap{min-height:48px;padding:.6em 1.2em;font-size:16px}.btn.w{flex:1 1 100%}
 .stk{display:flex;flex-direction:column;gap:10px;margin:12px 0}.stk .btn{width:100%}
 .omx{position:relative;overflow:hidden;width:min(100%,220px);margin:6px auto}.omx svg{width:100%;height:auto;display:block}
@@ -1303,7 +1306,7 @@ function cakeDlg(){
     }catch(e){stop();note.textContent='マイクを使えませんでした。ボタンかろうそくをタップしてね。'}
   }
   const canMic=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
-  const mkAct=()=>act.replaceChildren(...[btn('💨 ふーっ！',puff,'btn tap w'),canMic&&btn('🎤 息で消す',mic,'btn big')].filter(Boolean));
+  const mkAct=()=>act.replaceChildren(...[canMic&&btn('🎤 息で消す',mic,'btn big hero'),btn('💨 ふーっ！（タップで消す）',puff,canMic?'btn tap w ghost':'btn big hero')].filter(Boolean));
   // おみくじを引く：筒をふる → 棒が出てくる → 結果の紙がひらく
   let omiBusy=false,omiTs=[];
   const omiClear=()=>{omiTs.forEach(clearTimeout);omiTs=[];omiBusy=false};
