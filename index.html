@@ -19,7 +19,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font-size:16px;line-height:1.
 main{max-width:640px;margin:0 auto;padding:16px}
 h1{font-size:22px;margin:0 0 4px;color:var(--acc2)}h2{font-size:17px;margin:20px 0 4px;color:var(--acc2)}
 .note{color:var(--sub);font-size:14px;margin:4px 0}.note:empty{display:none}.fc{font-size:13px;font-weight:400;color:var(--sub);margin-left:10px}
-.cake{position:relative;overflow:hidden;width:min(100%,300px);margin:0 auto}.cake svg{width:100%;height:auto;display:block}
+.cake{cursor:pointer;position:relative;overflow:hidden;width:min(100%,300px);margin:0 auto}.cake svg{width:100%;height:auto;display:block}
 .btn.big{font-size:20px;padding:.85em 1.2em;min-height:60px;flex:1 1 100%}
 .btn.hero{min-height:76px;font-size:22px;letter-spacing:.05em;background:linear-gradient(135deg,#1f7a50,#2f9e6a);color:#fff;box-shadow:0 4px 14px #2f9e6a66;animation:heropl 2s ease-in-out infinite}
 @keyframes heropl{0%,100%{box-shadow:0 4px 14px #2f9e6a66,0 0 0 0 #2f9e6a55}50%{box-shadow:0 4px 14px #2f9e6a66,0 0 0 10px #2f9e6a00}}
@@ -43,9 +43,15 @@ h1{font-size:22px;margin:0 0 4px;color:var(--acc2)}h2{font-size:17px;margin:20px
 .omi{text-align:center;background:var(--tint);border-radius:14px;padding:12px;margin-top:10px}.omi .ol{font-size:34px;font-weight:700;color:var(--acc2);line-height:1.3}
 .dot{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-2px;margin-right:4px;border:1px solid var(--line)}.soon .row{margin:6px 0}
 .cdw{text-align:center}.cdw .cdn{font-size:15px;color:var(--sub)}.cdw .cdn b{font-size:46px;line-height:1.1;color:var(--acc2);margin:0 4px}.pg{height:10px;border-radius:999px;background:var(--tint);overflow:hidden;margin:8px 0 4px}.pg i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--acc),#7cc99a)}.cdw p{margin:6px 0}
-.box,.row2{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:12px 0}
+.box,.row2,.fcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:12px 0}
 .row2{display:flex;align-items:center;gap:8px;margin:8px 0}
 .mine{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.fcard{margin:10px 0}.fh{display:flex;align-items:center;gap:10px}.fh .g{flex:1;min-width:0}.fh .x2{flex:none;padding:12px 6px}
+.fi{font-size:15px;margin:6px 0 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.chips:empty{display:none}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--tint);color:var(--fg);border-radius:999px;padding:4px 12px;font-size:14px;line-height:1.5;white-space:nowrap}
+.chip.alt{background:var(--card);border:1px solid var(--line)}
+.fcard .btn,.mine2 .acts3 .btn{width:100%}.acts3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}.acts3 .btn{padding:.6em .3em;white-space:nowrap}
 .g{flex:1;min-width:0}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
 #ban{background:linear-gradient(90deg,var(--acc),#7cc99a);color:#fff;border-radius:14px;padding:12px 16px;font-weight:700;margin:12px 0}
@@ -71,7 +77,7 @@ dialog::backdrop{background:#0a2a1b88}
 .mini{animation:none!important}.mini svg{width:30px;height:auto}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @keyframes rise{from{transform:translateY(280px);opacity:0}to{transform:none;opacity:1}}
-.cv{min-height:130px;border-radius:14px;padding:18px;white-space:pre-wrap;word-break:break-word;font-size:17px;line-height:1.7;box-shadow:0 2px 8px #0002;margin:8px 0}
+.cv{min-height:130px;border-radius:14px;padding:18px 14px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;word-break:auto-phrase;line-break:strict;text-wrap:pretty;font-size:17px;line-height:1.7;box-shadow:0 2px 8px #0002;margin:8px 0}
 .cv .fr{font-size:13px;opacity:.8;margin-top:10px;text-align:right}
 .bar{display:flex;gap:8px;margin-top:14px}.bar .btn{flex:1}
 .creator{margin:24px 0;padding:14px;border:1px solid var(--acc);border-radius:14px;background:var(--tint);text-align:center}
@@ -89,7 +95,7 @@ details{margin-top:8px;font-size:14px;color:var(--sub)}
 .paper.lk{background:#ffffffd9;color:#3f8c86;font-size:16px;padding:26px 18px}#cl .paper{margin:18px auto 0}
 .pl{transform-origin:50% 100%;animation:grow 1s cubic-bezier(.2,1.4,.4,1) both}
 @keyframes grow{from{transform:translateY(70px) scale(.7);opacity:0}to{transform:none;opacity:1}}
-.paper{width:min(86vw,380px);margin:28px auto 0;padding:34px 22px;box-shadow:0 2px 10px #0003;text-align:center;font-size:19px;line-height:1.9;white-space:pre-wrap;word-break:break-word}
+.paper{width:min(90vw,380px);margin:28px auto 0;padding:30px 16px;box-shadow:0 2px 10px #0003;text-align:center;font-size:clamp(16px,4.9vw,19px);line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;word-break:auto-phrase;line-break:strict;text-wrap:pretty}
 .paper .fr{font-size:14px;opacity:.8;margin-top:16px;text-align:right}
 .cvb{width:min(86vw,380px);margin:14px auto 0;display:flex;gap:8px}
 .hang{position:relative;max-width:360px;margin:6px auto;transform-origin:50% 0;animation:sway 4s ease-in-out infinite}
@@ -1189,6 +1195,7 @@ async function dl(){
 const ZODIAC=[[1,20,'♒','みずがめ座'],[2,19,'♓','うお座'],[3,21,'♈','おひつじ座'],[4,20,'♉','おうし座'],[5,21,'♊','ふたご座'],[6,22,'♋','かに座'],[7,23,'♌','しし座'],[8,23,'♍','おとめ座'],[9,23,'♎','てんびん座'],[10,24,'♏','さそり座'],[11,23,'♐','いて座'],[12,22,'♑','やぎ座']];
 const STONE=['ガーネット','アメジスト','アクアマリン','ダイヤモンド','エメラルド','パール','ルビー','ペリドット','サファイア','オパール','トパーズ','ターコイズ'];
 const zodiac=(m,d)=>{let z=ZODIAC[11];for(const x of ZODIAC)if(m*100+d>=x[0]*100+x[1])z=x;return z};
+const triChips=(p,...ex)=>{const ok=p&&STONE[p.m-1],z=ok&&zodiac(p.m,p.d);return h('div',{class:'chips'},ok&&h('span',{class:'chip'},z[2]+' '+z[3]),ok&&h('span',{class:'chip'},'💎 '+STONE[p.m-1]),ex.map(x=>h('span',{class:'chip alt'},x)))};
 const trivia=p=>{if(!p||!STONE[p.m-1])return '';const z=zodiac(p.m,p.d);return z[2]+' '+z[3]+' ・ 💎 '+STONE[p.m-1]};
 const hash=s=>{let a=2166136261;for(const c of String(s)){a^=c.codePointAt(0);a=Math.imul(a,16777619)}return a>>>0};
 const OMI_LV=['大吉','大吉','中吉','中吉','小吉'];
@@ -1286,24 +1293,25 @@ function cakeDlg(){
       const an=ctx.createAnalyser();an.fftSize=1024;an.smoothingTimeConstant=0;ctx.createMediaStreamSource(stream).connect(an);
       const buf=new Uint8Array(an.fftSize),bar=mt.firstChild,t0=performance.now();let hot=0,base=0,n=0,hinted=false;
       mt.hidden=false;
-      note.textContent='マイクに「ふーっ」と息をふきかけてね🎤（消えないときは、ボタンやろうそくをタップしてもOK）';
+      note.textContent='マイクに「ふーっ」と息をふきかけてね🎤（ケーキをタップしてもOK）';
       // まわりの音の大きさを最初に少し測り、それより十分大きい音（息）が続いたら消す。端末ごとのマイクの感度の差に合わせるため
       const tick=()=>{
         if(!stream)return;if(!cake.isConnected){stop();return}
         an.getByteTimeDomainData(buf);let sum=0;for(const v of buf){const x=(v-128)/128;sum+=x*x}
         const rms=Math.sqrt(sum/buf.length);
         bar.style.width=Math.min(100,rms*500)+'%';
-        if(n<30){base+=(rms-base)/(++n)}
+        if(n<20){base+=(rms-base)/(++n)}
         else{
-          const th=Math.max(0.05,Math.min(base,0.04)*3.5);
-          if(rms>th)hot++;else{hot=Math.max(0,hot-1);base+=(rms-base)*.01}
-          if(hot>=8){stop();puff();return}
+          const th=Math.max(0.035,Math.min(base,0.03)*3);
+          if(rms>th){hot++;if(hot>=3&&hot%2===1){const g=lit()[0];if(g)blow(g)}} // 息をかけている間、少しずつ消える
+          else{hot=Math.max(0,hot-1);base+=(rms-base)*.01}
+          if(!stream)return; // 全部消えて終了
         }
-        if(!hinted&&performance.now()-t0>9000){hinted=true;note.textContent='反応しないときは、「ふーっ！」ボタンかろうそくをタップしてね👆'}
+        if(!hinted&&performance.now()-t0>9000){hinted=true;note.textContent='反応しないときは、ケーキをタップしてね👆'}
         raf=requestAnimationFrame(tick);
       };
       tick();
-    }catch(e){stop();note.textContent='マイクを使えませんでした。ボタンかろうそくをタップしてね。'}
+    }catch(e){stop();note.textContent='マイクを使えませんでした。ケーキをタップしてね。'}
   }
   const canMic=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
   const mkAct=()=>act.replaceChildren(...[canMic&&btn('🎤 息で消す',mic,'btn big hero'),btn('💨 ふーっ！（タップで消す）',puff,canMic?'btn tap w ghost':'btn big hero')].filter(Boolean));
@@ -1344,8 +1352,8 @@ function cakeDlg(){
       h('div',{class:'stk',style:fx?'animation:fadein .5s ease-out 1.1s both':''},mk,ln,btn('閉じる',()=>$('#dlg').close(),'btn tap ghost')),out);
     res.scrollIntoView({behavior:'smooth',block:'start'})};
   const reset=()=>{stop();omiClear();cake.querySelectorAll('.cdl.off').forEach(g=>g.classList.remove('off'));res.replaceChildren();note.textContent='願いごとをして、ろうそくの火を消そう🕯';mkAct()};
-  cake.onclick=e=>{const g=e.target.closest&&e.target.closest('.cdl');if(g)blow(g)};
-  note.textContent='願いごとをして、ろうそくの火を消そう🕯（ろうそくをタップしてもOK）';mkAct();
+  cake.onclick=()=>puff();
+  note.textContent='願いごとをして、ろうそくの火を消そう🕯（ケーキをタップしてもOK）';mkAct();
   show(my.dd===0?'🎂 '+prof.nm+'さん、おめでとう！':'🎂 バースデーケーキ',cake,note,mt,act,res);
   $('#dlg').addEventListener('close',()=>{stop();omiClear()},{once:true});
 }
@@ -1451,9 +1459,11 @@ function buildApp(A){
     if(bt!==banKey){banKey=bt;banOff=false;clearTimeout(banT);banT=setTimeout(()=>{banOff=true;const e=$('#ban');if(e){e.classList.add('out');setTimeout(()=>e.remove(),450)}},5000)}
     if(!banOff)A.append(h('div',{id:'ban'},bt));
   }
-  A.append(h('div',{class:'box mine'},icon(()=>inbox(),'わたしのカード'),
-    h('div',{class:'g'},h('div',{class:'nmr'},avatar(myAv(),34),h('b',{},prof.nm)),h('div',{class:'note'},prof.m+'月'+prof.d+'日 ・ '+(my.dd===0?'今日が誕生日！':'あと'+my.dd+'日')),h('div',{class:'note'},trivia(prof)),h('div',{},'届いたカード '+Math.max((cnt[me.uid+'w']||0)+(cnt[me.uid+'p']||0),(walls[me.uid]||[]).length+priv.length)+'枚')),
-    btn('✉ カード',()=>inbox()),btn('🎂 ケーキ',cakeDlg),btn('編集',()=>show('プロフィール編集',profForm(true)))));
+  A.append(h('div',{class:'box mine2'},
+    h('div',{class:'fh'},icon(()=>inbox(),'わたしのカード'),
+      h('div',{class:'g'},h('div',{class:'nmr'},avatar(myAv(),34),h('b',{},prof.nm)),h('div',{class:'fi'},prof.m+'月'+prof.d+'日 ・ '+(my.dd===0?'今日が誕生日！':'あと'+my.dd+'日')))),
+    triChips(prof,'✉ 届いたカード '+Math.max((cnt[me.uid+'w']||0)+(cnt[me.uid+'p']||0),(walls[me.uid]||[]).length+priv.length)+'枚'),
+    h('div',{class:'acts3'},btn('✉ カード',()=>inbox(),'btn tap'),btn('🎂 ケーキ',cakeDlg,'btn tap'),btn('編集',()=>show('プロフィール編集',profForm(true)),'btn tap ghost'))));
   if(my.dd>0)A.append(cdBox(my));
   if(/^line:/.test(me.uid)&&!hidePh()&&!myPh()&&!prof.ph&&!linePhTried())A.append(h('div',{class:'box'},h('p',{class:'note'},'LINEの写真を表示するには、一度だけLINEで確認が必要です（ログアウトはしません。データもそのままです）。'),btn('LINEの写真を取得',()=>{try{localStorage.setItem('lph_'+me.uid,'1')}catch(e){}lineLogin()},'btn s')));
   const soon=fl.filter(p=>p.dd<=3&&walls[p.id]!==undefined&&sentPriv[p.id]!==undefined&&![...walls[p.id],...sentPriv[p.id]].some(c=>c.from===me.uid&&c.y===p.y&&c.bg!=='bal'));
@@ -1465,10 +1475,13 @@ function buildApp(A){
   if(!fl.length)A.append(h('p',{class:'note'},'まだ友だちがいません。「友だち招待QR」を見せて読み取ってもらおう！'));
   fl.forEach(p=>{
     const n=Math.max(cnt[p.id+'w']||0,(walls[p.id]||[]).filter(c=>c.y===p.y).length);
-    A.append(h('div',{class:'row2'},icon(()=>pickYear(p),p.nm+'さんのカード'),
-      h('div',{class:'g'},h('div',{class:'nmr'},avatar(p.ph,34),h('b',{},p.nm)),p.dd===0&&h('div',{class:'bd0'},'今日が誕生日❕✨'),h('div',{class:'note'},p.m+'月'+p.d+'日 ・ '+(p.dd===0?'今日！':'あと'+p.dd+'日')),h('div',{class:'note'},trivia(p)),h('div',{class:'note'},'風船 '+n+'個')),
-      btn('📖 カード',()=>pickYear(p)),
-      h('button',{class:'x2',onclick:()=>ask('友だちを解除','「'+p.nm+'」さんとの友だちを解除します。お互いの誕生日と風船が見えなくなります。よろしいですか？','解除する',async()=>{try{await remove(ref(db,`friends/${me.uid}/${p.id}`));await remove(ref(db,`friends/${p.id}/${me.uid}`))}catch(e){msg('解除できませんでした。')}})},'解除')));
+    A.append(h('div',{class:'fcard'},
+      h('div',{class:'fh'},icon(()=>pickYear(p),p.nm+'さんのカード'),
+        h('div',{class:'g'},h('div',{class:'nmr'},avatar(p.ph,34),h('b',{},p.nm)),p.dd===0&&h('div',{class:'bd0'},'今日が誕生日❕✨')),
+        h('button',{class:'x2',onclick:()=>ask('友だちを解除','「'+p.nm+'」さんとの友だちを解除します。お互いの誕生日と風船が見えなくなります。よろしいですか？','解除する',async()=>{try{await remove(ref(db,`friends/${me.uid}/${p.id}`));await remove(ref(db,`friends/${p.id}/${me.uid}`))}catch(e){msg('解除できませんでした。')}})},'解除')),
+      h('div',{class:'fi'},p.m+'月'+p.d+'日 ・ '+(p.dd===0?'今日！':'あと'+p.dd+'日')),
+      triChips(p,'🎈 風船 '+n+'個'),
+      btn('📖 カードを見る',()=>pickYear(p),'btn tap')));
   });
   const fs=h('select',{onchange:e=>{const k=e.target.value;setFont(k);set(ref(db,`settings/${me.uid}/font`),k).catch(()=>{})}},Object.entries(FONTS).map(([k,v])=>h('option',{value:k},v.n)));fs.value=curFont();
   A.append(h('div',{class:'box'},h('b',{},'設定'),h('div',{class:'row'},'フォント',fs),h('p',{class:'note'},'アカウント写真は、GoogleやLINEのアカウントからログインのたびに取得して、友だちにも表示されます。名前だけで始めた人は人マークになります。')));
