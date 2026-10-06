@@ -989,6 +989,23 @@ document.addEventListener('visibilitychange',()=>{
   const u=me;u.reload().catch(()=>{}).then(()=>{if(me===u){syncPhoto();if(prof)render()}});
 });
 
+// ---- 日付が変わったら「あと〇日」を自動で更新する ----
+// 開きっぱなし・ホーム画面から戻ったときも、今日の日付で表示し直す
+const dayKey=()=>{const n=new Date();return n.getFullYear()+'-'+n.getMonth()+'-'+n.getDate()};
+let lastDay=dayKey();
+const dayCheck=()=>{
+  const k=dayKey();
+  if(k===lastDay)return;
+  lastDay=k;
+  partyDone=false; // 新しい日になったので、誕生日当日のお祝いも出し直せるようにする
+  if(me&&prof)render();
+};
+setInterval(dayCheck,60000); // 1分ごとに日付を確認（0時を過ぎたらすぐ更新）
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)dayCheck()});
+window.addEventListener('focus',dayCheck);
+window.addEventListener('pageshow',dayCheck);
+window.addEventListener('online',dayCheck);
+
 // ---- LINEで招待 ----
 const lineInviteUrl=()=>'https://line.me/R/share?text='+encodeURIComponent('おたんじょうびカードで、友だちになろう🎈 誕生日をお祝いし合おうね！\n'+base+'?add='+me.uid);
 const lineInviteBtn=()=>h('a',{class:'btn line',href:lineInviteUrl(),target:'_blank',rel:'noopener'},withIcon(L_SVG,'LINEで招待を送る','ln'));
