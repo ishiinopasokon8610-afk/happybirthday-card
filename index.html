@@ -144,16 +144,6 @@ dialog[open]{animation:dlgin .4s cubic-bezier(.2,1.3,.4,1)}dialog[open]::backdro
 #gb svg{width:34px;height:auto}#gb:active{transform:scale(.85)}
 @keyframes pulse{0%,100%{box-shadow:0 4px 14px #0004,0 0 0 0 #ffffffaa}50%{box-shadow:0 4px 14px #0004,0 0 0 12px #fff0}}
 @media (prefers-reduced-motion:reduce){#amb,h1,#ban,#gb,.rb{animation:none}#app.in>*,.paper.pin,dialog[open]{animation:none}}
-@font-face{font-family:"F_mushin";src:url("fonts/mushin.woff2") format("woff2");font-display:swap}
-@font-face{font-family:"F_hgnewm";src:url("fonts/hgnewm.woff2") format("woff2");font-display:swap}
-@font-face{font-family:"F_hgmaru";src:url("fonts/hgmaru.woff2") format("woff2");font-display:swap}
-@font-face{font-family:"F_hgreisho";src:url("fonts/hgreisho.woff2") format("woff2");font-display:swap}
-@font-face{font-family:"F_hgdot";src:url("fonts/hgdot.woff2") format("woff2");font-display:swap}
-@font-face{font-family:"F_hgrtw060";src:url("fonts/hgrtw060.woff2") format("woff2");font-display:swap}
-@font-face{font-family:"F_hgrtw075";src:url("fonts/hgrtw075.woff2") format("woff2");font-display:swap}
-@font-face{font-family:"F_hgrtw085";src:url("fonts/hgrtw085.woff2") format("woff2");font-display:swap}
-@font-face{font-family:"F_hgrtw095";src:url("fonts/hgrtw095.woff2") format("woff2");font-display:swap}
-@font-face{font-family:"F_hgrtw100";src:url("fonts/hgrtw100.woff2") format("woff2");font-display:swap}
 @font-face{font-family:"F_zenmaru";font-weight:300;src:url("fonts/zenmaru-light.woff2") format("woff2");font-display:swap}
 @font-face{font-family:"F_zenmaru";font-weight:400;src:url("fonts/zenmaru-regular.woff2") format("woff2");font-display:swap}
 @font-face{font-family:"F_zenmaru";font-weight:500;src:url("fonts/zenmaru-medium.woff2") format("woff2");font-display:swap}
@@ -297,9 +287,9 @@ const ENV=`<svg viewBox="0 0 300 300" aria-hidden="true"><rect x="0" y="120" wid
 const base=location.href.split(/[?#]/)[0];
 const msg=t=>{$('#toast').textContent=t||''};
 const rid=()=>Math.random().toString(36).slice(2,12);
-const FONTS={std:{n:'標準',ff:'"Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif'},mu:{n:'無心',ff:'"F_mushin","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},nm:{n:'HG NewゴシックM',ff:'"F_hgnewm","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},mp:{n:'HG創英丸ポップ体',ff:'"F_hgmaru","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},rs:{n:'HG創英隷書体',ff:'"F_hgreisho","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},dt:{n:'HGドットNewゴシック',ff:'"F_hgdot","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},r60:{n:'HG NewゴシックRTW 60',ff:'"F_hgrtw060","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},r75:{n:'HG NewゴシックRTW 75',ff:'"F_hgrtw075","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},r85:{n:'HG NewゴシックRTW 85',ff:'"F_hgrtw085","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},r95:{n:'HG NewゴシックRTW 95',ff:'"F_hgrtw095","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},r100:{n:'HG NewゴシックRTW 100',ff:'"F_hgrtw100","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'},zm:{n:'Zen丸ゴシック',ff:'"F_zenmaru","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'}};
+const FONTS={std:{n:'標準',ff:'"Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif'},nm:{n:'Noto Sans JP（ゴシック）',ff:'"Noto Sans JP","Hiragino Sans","Yu Gothic",Meiryo,sans-serif',g:'Noto+Sans+JP:wght@400;500;700'},mu:{n:'Zen角ゴシック',ff:'"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",Meiryo,sans-serif',g:'Zen+Kaku+Gothic+New:wght@400;500;700'},mr:{n:'M PLUS Rounded 1c（丸ゴシック）',ff:'"M PLUS Rounded 1c","Hiragino Sans","Yu Gothic",Meiryo,sans-serif',g:'M+PLUS+Rounded+1c:wght@400;500;700'},mp:{n:'Mochiy Pop One（ポップ体）',ff:'"Mochiy Pop One","Hiragino Sans","Yu Gothic",Meiryo,sans-serif',g:'Mochiy+Pop+One'},sm:{n:'Shippori Mincho（明朝）',ff:'"Shippori Mincho","Hiragino Sans","Yu Gothic",Meiryo,sans-serif',g:'Shippori+Mincho:wght@400;700'},rs:{n:'Zen Antique（アンティーク）',ff:'"Zen Antique","Hiragino Sans","Yu Gothic",Meiryo,sans-serif',g:'Zen+Antique'},dt:{n:'DotGothic16（ドット）',ff:'"DotGothic16","Hiragino Sans","Yu Gothic",Meiryo,sans-serif',g:'DotGothic16'},zm:{n:'Zen丸ゴシック',ff:'"F_zenmaru","Hiragino Sans","Yu Gothic",Meiryo,sans-serif'}};
 function setFont(k){const f=FONTS[k]||FONTS.std;document.documentElement.style.setProperty('--ff',f.ff);if(f.g&&!document.getElementById('gf'+k))document.head.append(h('link',{id:'gf'+k,rel:'stylesheet',href:'https://fonts.googleapis.com/css2?family='+f.g+'&display=swap'}));try{localStorage.setItem('font',k)}catch(e){}}
-const curFont=()=>{try{return localStorage.getItem('font')||'std'}catch(e){return 'std'}};
+const curFont=()=>{try{const k=localStorage.getItem('font')||'std';return FONTS[k]?k:'std'}catch(e){return 'std'}};
 setFont(curFont());
 const nxt=p=>{const n=new Date(),t=new Date(n.getFullYear(),n.getMonth(),n.getDate());let d=new Date(t.getFullYear(),p.m-1,p.d);if(d<t)d=new Date(t.getFullYear()+1,p.m-1,p.d);return{dd:Math.round((d-t)/864e5),y:d.getFullYear()}};
 const sel=(n,bl)=>h('select',{},bl&&h('option',{value:''},'--'),Array.from({length:n},(_,i)=>h('option',{value:i+1},i+1)));
@@ -601,7 +591,7 @@ async function claimRun(code){
 const G_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.46a5.52 5.52 0 0 1-2.4 3.62v3h3.88c2.27-2.09 3.58-5.17 3.58-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.88-3c-1.07.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.09C3.25 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.56.37-2.28V6.63H1.27A11.99 11.99 0 0 0 0 12c0 1.94.46 3.77 1.27 5.37l4-3.09z"/><path fill="#EA4335" d="M12 4.76c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.27 6.63l4 3.09C6.22 6.87 8.87 4.76 12 4.76z"/></svg>';
 const L_SVG='<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#06c755"/><path fill="#fff" d="M16 6.5c-5.8 0-10.5 3.7-10.5 8.3 0 4.1 3.7 7.5 8.7 8.2.3.1.8.2.9.5.1.3.1.7 0 1l-.1.9c0 .3-.2 1 .9.6s5.8-3.4 7.9-5.8c1.5-1.6 2.2-3.2 2.2-5.4 0-4.6-4.7-8.3-10.5-8.3z"/><text x="16" y="17.6" text-anchor="middle" font-size="5.4" font-weight="800" font-family="Arial,Helvetica,sans-serif" fill="#06c755">LINE</text></svg>';
 const withIcon=(svg,text,cls)=>{const i=h('span',{class:'bi'+(cls?' '+cls:'')});i.innerHTML=svg;return h('span',{class:'bl'},i,text)};
-const LINE_IMG='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTLPMRWt1hjM_u207yDvwk0Rawtfvjw3-xswVdBCP3vDw&s=10';
+const LINE_IMG='https://raw.githubusercontent.com/ishiinopasokon8610-afk/image-list/main/images/images%20(1).png';
 const lineLabel=()=>{ // 指定の画像を使い、読み込めなかったら内蔵のロゴに切り替える
   const i=h('span',{class:'bi ln'}),im=h('img',{src:LINE_IMG,alt:'',width:26,height:26,referrerpolicy:'no-referrer'});
   im.onerror=()=>{i.innerHTML=L_SVG};i.append(im);return h('span',{class:'bl'},i,'LINEでログイン');
@@ -1062,9 +1052,19 @@ const drawBalloon=(g,x,y,r,col)=>{
   g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=2;g.beginPath();g.moveTo(x,y+r*1.14);g.bezierCurveTo(x-r*.3,y+r*1.5,x+r*.3,y+r*1.7,x,y+r*2.1);g.stroke();
   g.fillStyle='rgba(255,255,255,.35)';g.beginPath();g.ellipse(x-r*.35,y-r*.35,r*.16,r*.3,-.4,0,Math.PI*2);g.fill();g.restore();
 };
+const FONT_FIXED_TEXT='…✉、あうおがきくこさしじたつでとのひびみめもょりるれをんアイカキスセタッテデトドバプムラリンー一丸主今入公写勢台大定年度式文日書本決生真紙線色設誕送運開非！（）：';
+async function loadFontText(ff,text){
+  // Google Fontsは文字の範囲ごとに分割して配信されるため、画像に描く文字を指定して先に読み込んでおく
+  try{
+    const lk=document.getElementById('gf'+curFont());
+    if(lk&&!lk.sheet)await new Promise(r=>{lk.addEventListener('load',r,{once:true});lk.addEventListener('error',r,{once:true});setTimeout(r,3000)});
+    const t=FONT_FIXED_TEXT+String(text||'');
+    await Promise.all([document.fonts.load('48px '+ff,t),document.fonts.load('700 48px '+ff,t)]);
+  }catch(e){}
+}
 async function makeCardImage(c,t,f){
   const b=BG[c.bg]||BG.a1,fm=FRM[c.fr],ids=stIds(c.st),ff=(FONTS[curFont()]||FONTS.std).ff;
-  try{await document.fonts.load('48px '+ff)}catch(e){}
+  await loadFontText(ff,String(t).slice(0,300)+String((f&&f.nm)||'')+c.y);
   const im=await loadImg(photoOf(c.from));
   const W=1080,M=72,PW=W-2*M,PX=76,FS=50,LH=92,K=2.8,cv=document.createElement('canvas'),g=cv.getContext('2d');
   g.font=FS+'px '+ff;
@@ -1255,7 +1255,7 @@ const OMI_BOX='<svg viewBox="0 0 200 230" role="img" aria-label="おみくじの
 // おみくじの結果を画像にする（カードの画像と同じ見た目の台紙に載せる）
 async function makeOmiImage(r){
   const ff=(FONTS[curFont()]||FONTS.std).ff;
-  try{await document.fonts.load('48px '+ff)}catch(e){}
+  await loadFontText(ff,JSON.stringify(r||{}));
   const W=1080,M=72,PW=W-2*M,FS=48,LH=84,maxW=PW-140,cv=document.createElement('canvas'),g=cv.getContext('2d');
   g.font=FS+'px '+ff;
   const lines=[];let cur='';
